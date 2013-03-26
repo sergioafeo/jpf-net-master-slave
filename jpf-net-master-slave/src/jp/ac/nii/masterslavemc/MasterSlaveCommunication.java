@@ -1,0 +1,138 @@
+package jp.ac.nii.masterslavemc;
+
+import java.io.Serializable;
+
+/**
+ * This is the communication layer between master and slave model
+ * checkers
+ * @author Sergio A. Feo
+ */
+public class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializable {
+
+	private static final long serialVersionUID = 3953833501640741810L;
+	private static MasterSlaveCommunication instance;
+	private static IMasterSlaveCommunication master, slave;
+
+	public static IMasterSlaveCommunication getInstance() {
+		return instance;
+	}
+	
+	public static void setInstance(MasterSlaveCommunication i) {
+		instance = i;
+	}
+
+	private boolean slaveRunning = false, resultsPending = false,
+			paramsAvailable = false;
+	private SearchParamBundle searchParams;
+
+	/* (non-Javadoc)
+	 * @see jp.ac.nii.masterslavemc.IMasterSlaveCommunication#searchSlave(jp.ac.nii.masterslavemc.SearchParamBundle)
+	 */
+	@Override
+	public synchronized void searchSlave(SearchParamBundle params) {
+		while (paramsAvailable) {
+			try {
+				wait();
+			} catch (InterruptedException e) {
+			}
+		}
+		slaveRunning = true;
+		paramsAvailable = true;
+
+		searchParams = params;
+
+		notifyAll();
+	}
+
+	SearchResultBundle searchResult;
+
+	/* (non-Javadoc)
+	 * @see jp.ac.nii.masterslavemc.IMasterSlaveCommunication#notifySearchFinished(jp.ac.nii.masterslavemc.SearchResultBundle)
+	 */
+	@Override
+	public synchronized void notifySearchFinished(SearchResultBundle result) {
+		while (resultsPending)
+			try {
+				wait();
+			} catch (InterruptedException e) {
+			}	
+		searchResult = result;
+		slaveRunning = false;
+		resultsPending = true;
+		notifyAll();
+	}
+
+	/* (non-Javadoc)
+	 * @see jp.ac.nii.masterslavemc.IMasterSlaveCommunication#getSearchResults()
+	 */
+	@Override
+	public synchronized SearchResultBundle getSearchResults() {
+		while (slaveRunning) { 
+			try {
+				wait();
+			} catch (InterruptedException e) {
+			}
+		}
+		SearchResultBundle retval = searchResult;
+		resultsPending = false;
+		notifyAll();
+		return retval;
+	}
+
+	/* (non-Javadoc)
+	 * @see jp.ac.nii.masterslavemc.IMasterSlaveCommunication#getSearchParams()
+	 */
+	@Override
+	public synchronized SearchParamBundle getSearchParams() {
+		while (!paramsAvailable)
+			try {
+				wait();
+			} catch (InterruptedException e) {
+			}
+		SearchParamBundle retval = searchParams;
+		paramsAvailable = false;
+		notifyAll();
+		return retval;
+	}
+
+	private boolean slaveInitializing = true;;
+
+	/* (non-Javadoc)
+	 * @see jp.ac.nii.masterslavemc.IMasterSlaveCommunication#readyToSearch()
+	 */
+	@Override
+	public synchronized void readyToSearch() {
+		while (slaveInitializing)
+			try {
+				wait();
+			} catch (InterruptedException e) {
+			}
+	}
+
+	/* (non-Javadoc)
+	 * @see jp.ac.nii.masterslavemc.IMasterSlaveCommunication#notifyReadyToSearch()
+	 */
+	@Override
+	public synchronized void notifyReadyToSearch() {
+		slaveInitializing = false;
+		notifyAll();
+	}
+
+	@Override
+	public void setSlave(IMasterSlaveCommunication slave) {
+		this.slave = slave;
+	}
+
+	@Override
+	public void setMaster(IMasterSlaveCommunication master) {
+		this.master = master;
+	}
+
+	public IMasterSlaveCommunication getSlave() {
+		return slave;
+	}
+
+	public IMasterSlaveCommunication getMaster() {
+		return master;
+	}
+}

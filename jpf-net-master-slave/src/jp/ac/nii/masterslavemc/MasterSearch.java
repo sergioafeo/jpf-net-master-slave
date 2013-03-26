@@ -1,6 +1,7 @@
 package jp.ac.nii.masterslavemc;
 
-import jp.ac.nii.masterslavemc.SlaveSearch.SearchCommand;
+import java.rmi.RemoteException;
+
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.jvm.JVM;
 
@@ -12,7 +13,7 @@ import gov.nasa.jpf.jvm.JVM;
  * and triggering slave searches when appropriate.
  */
 public class MasterSearch extends SharedSearch {
-	
+	private IMasterSlaveCommunication comm;
 	
 	public MasterSearch(Config config, JVM vm) {
 		super(config, vm);
@@ -20,14 +21,19 @@ public class MasterSearch extends SharedSearch {
 
 	@Override
 	public void search() {
-		
 		notifySearchStarted();
+		try {
+		comm = MasterSlaveCommunication.getInstance().getSlave();
+		
 		comm.searchSlave(new SearchParamBundle(null, null, null,
 				SearchCommand.SEARCH));
-		SearchResultBundle res = comm.getSearchResults();
+		SearchResultBundle res = MasterSlaveCommunication.getInstance().getSearchResults();
 		System.out.println("Search returned!!");
-		notifySearchFinished();
 		comm.searchSlave(new SearchParamBundle(null, null, null,
 				SearchCommand.FINISH));
+		notifySearchFinished();
+		} catch (RemoteException e) {
+			e.printStackTrace();
+		}
 	}
 }

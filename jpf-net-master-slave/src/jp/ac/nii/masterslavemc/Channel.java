@@ -1,6 +1,9 @@
 package jp.ac.nii.masterslavemc;
 
-public class Channel {
+import java.io.Serializable;
+
+public class Channel implements Serializable{
+	private static final long serialVersionUID = 6773095734481426847L;
 	private int port;
 
 	public int getPort() {

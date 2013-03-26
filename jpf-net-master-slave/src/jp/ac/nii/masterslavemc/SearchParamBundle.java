@@ -1,9 +1,14 @@
 package jp.ac.nii.masterslavemc;
 
-import gov.nasa.jpf.jvm.RestorableVMState;
-import jp.ac.nii.masterslavemc.SlaveSearch.SearchCommand;
+import java.io.Serializable;
 
-public class SearchParamBundle {
+import gov.nasa.jpf.jvm.RestorableVMState;
+
+public class SearchParamBundle implements Serializable{
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -6078460271380596549L;
 	private RestorableVMState startState;
 	private Channel searchChannel;
 	private ChannelQueues incomingQueues;

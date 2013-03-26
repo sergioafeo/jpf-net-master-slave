@@ -1,16 +1,19 @@
 package jp.ac.nii.masterslavemc;
 
+import java.rmi.RemoteException;
+
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.search.Search;
 
-public class Main {
+public class MainLocal {
 	private static JPF master, slave;
 
 	/**
 	 * @param args
+	 * @throws RemoteException 
 	 */
-	public static void main(String[] args) {
+	public static void main(String[] args) throws RemoteException {
 		Config configMaster = JPF.createConfig(args);
 		Config configSlave = JPF.createConfig(args);
 
@@ -26,8 +29,7 @@ public class Main {
 		// Obtain JPF instances
 		master = new JPF(configMaster);
 		slave = new JPF(configSlave);
-		// Link both instances using the communications interface
-		MasterSlaveLocalCommunication.setModelCheckerRefs(master, slave);
+
 		// Start the slave in the background
 		(new Thread() {
 			public void run() {
@@ -35,7 +37,7 @@ public class Main {
 			}
 		}).start();
 		// Finally, launch the master after waiting for the slave to initialize
-		MasterSlaveLocalCommunication.getInstance().readyToSearch();
+		MasterSlaveCommunication.getInstance().readyToSearch();
 		master.run();
 	}
 }
