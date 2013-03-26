@@ -1,5 +1,7 @@
 package jp.ac.nii.masterslavemc;
 
+import java.io.Serializable;
+
 import gov.nasa.jpf.State;
 
 /**
@@ -8,7 +10,10 @@ import gov.nasa.jpf.State;
  * Bundles the payload of a network message and the VM state of the program which sent it.
  *
  */
-public class NetworkMessage {
+public class NetworkMessage implements Serializable{
+
+	private static final long serialVersionUID = -4055812705206158686L;
+
 	/**
 	 * Payload of the network message
 	 */
