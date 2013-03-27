@@ -14,16 +14,14 @@ public class SlaveSearch extends SharedSearch {
 	@Override
 	public void search() {
 		try {
-			IMasterSlaveCommunication comm = MasterSlaveCommunication
-					.getInstance().getMaster();
+			CommAdapter comm = new CommAdapter();
 			SearchParamBundle params;
 			boolean done = false;
 			comm.notifyReadyToSearch();
 			notifySearchStarted();
 			while (!done)
 				try {
-					params = MasterSlaveCommunication
-							.getInstance().getSearchParams();
+					params = comm.getSearchParams();
 					switch (params.getCommand()) {
 					case SEARCH:
 						System.out.println("I was told to search!!");

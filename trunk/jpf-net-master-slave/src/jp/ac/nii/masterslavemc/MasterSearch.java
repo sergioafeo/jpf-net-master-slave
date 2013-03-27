@@ -13,7 +13,7 @@ import gov.nasa.jpf.jvm.JVM;
  * and triggering slave searches when appropriate.
  */
 public class MasterSearch extends SharedSearch {
-	private IMasterSlaveCommunication comm;
+	
 	
 	public MasterSearch(Config config, JVM vm) {
 		super(config, vm);
@@ -23,11 +23,11 @@ public class MasterSearch extends SharedSearch {
 	public void search() {
 		notifySearchStarted();
 		try {
-		comm = MasterSlaveCommunication.getInstance().getSlave();
+		CommAdapter comm = new CommAdapter();
 		
 		comm.searchSlave(new SearchParamBundle(null, null, null,
 				SearchCommand.SEARCH));
-		SearchResultBundle res = MasterSlaveCommunication.getInstance().getSearchResults();
+		SearchResultBundle res = comm.getSearchResults();
 		System.out.println("Search returned!!");
 		comm.searchSlave(new SearchParamBundle(null, null, null,
 				SearchCommand.FINISH));

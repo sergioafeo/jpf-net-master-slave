@@ -3,7 +3,7 @@ package jp.ac.nii.masterslavemc;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
-public interface IMasterSlaveCommunication extends Remote{
+interface IMasterSlaveCommunication extends Remote{
 
 	void searchSlave(SearchParamBundle params) throws RemoteException;
 
