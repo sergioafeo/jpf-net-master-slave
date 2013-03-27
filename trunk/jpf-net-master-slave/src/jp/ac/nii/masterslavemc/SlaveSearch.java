@@ -14,7 +14,7 @@ public class SlaveSearch extends SharedSearch {
 	@Override
 	public void search() {
 		try {
-			CommAdapter comm = new CommAdapter();
+			CommAdapter comm = CommAdapter.getInstance();
 			SearchParamBundle params;
 			boolean done = false;
 			comm.notifyReadyToSearch();

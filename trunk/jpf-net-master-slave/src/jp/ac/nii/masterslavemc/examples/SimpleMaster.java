@@ -7,6 +7,42 @@ import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
 
+
+class WorkerThread implements Runnable {
+	private Socket mySocket;
+
+	public WorkerThread(Socket client) {
+		mySocket = client;
+	}
+
+	public void run() {
+		BufferedReader input = null;
+		PrintWriter output = null;
+		try {
+			input = new BufferedReader(new InputStreamReader(
+					mySocket.getInputStream()));
+			output = new PrintWriter(mySocket.getOutputStream());
+		} catch (IOException e1) {
+			return;
+		}
+
+		while (true)
+			try {
+				String msg = input.readLine();
+				if (msg.equals("FAIL")) {
+					assert (false);
+				} else
+					output.println(msg);
+			} catch (IOException e) {
+				break;
+			}
+		
+		try {
+			mySocket.close();
+		} catch (IOException e) {}
+	}
+}
+
 public class SimpleMaster {
 
 	/**
@@ -16,16 +52,10 @@ public class SimpleMaster {
 		try {
 			ServerSocket s = new ServerSocket(5123);
 			Socket client = null;
-			BufferedReader input = null;
-			PrintWriter output = null;
-			while (true){
+
+			while (true) {
 				client = s.accept();
-				input = new BufferedReader(new InputStreamReader(client.getInputStream()));
-				output = new PrintWriter(client.getOutputStream());
-				
-				String msg = input.readLine();
-				if (msg.equals("FAIL")) {assert(false);}
-				else output.println(msg);
+				new Thread(new WorkerThread(client)).start();
 			}
 		} catch (IOException e) {
 			e.printStackTrace();
