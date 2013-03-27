@@ -11,13 +11,18 @@ import java.rmi.RemoteException;
  */
 public class CommAdapter {
 	private MasterSlaveCommunication comm;
+	private static final CommAdapter instance = new CommAdapter();
 	
 	private CommAdapter(MasterSlaveCommunication comm) {
 		this.comm = comm;
 	}
 	
-	public CommAdapter() {
+	private CommAdapter() {
 		this(MasterSlaveCommunication.getInstance());
+	}
+	
+	public static CommAdapter getInstance(){
+		return instance ;
 	}
 
 	/**

@@ -1,23 +1,19 @@
 package jp.ac.nii.masterslavemc;
 
-import java.rmi.AccessException;
-import java.rmi.AlreadyBoundException;
+import gov.nasa.jpf.Config;
+import gov.nasa.jpf.JPF;
+
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
 
-import gov.nasa.jpf.JPF;
-import gov.nasa.jpf.Config;
-import gov.nasa.jpf.search.Search;
-
 public class RemoteMaster {
 
 	public static void main(String[] args) {
 		Config configMaster = JPF.createConfig(args);
-		// Config configSlave = JPF.createConfig(args);
-
+		
 		// Set the configuration parameters for master and slave
 		configMaster.setProperty("search.class",
 				"jp.ac.nii.masterslavemc.MasterSearch");
