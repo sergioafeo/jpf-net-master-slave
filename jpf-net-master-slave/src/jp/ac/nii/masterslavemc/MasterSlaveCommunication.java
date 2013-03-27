@@ -11,16 +11,17 @@ import java.io.Serializable;
 class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializable {
 
 	private static final long serialVersionUID = 3953833501640741810L;
-	private static MasterSlaveCommunication instance;
+	private static final MasterSlaveCommunication instance = new MasterSlaveCommunication();
 	private static IMasterSlaveCommunication master, slave;
 
+	/**
+	 * @return The singleton instance of MasterSlaveCommunication
+	 */
 	public static MasterSlaveCommunication getInstance() {
 		return instance;
 	}
 	
-	public static void setInstance(MasterSlaveCommunication i) {
-		instance = i;
-	}
+	private MasterSlaveCommunication() {};
 
 	private boolean slaveRunning = false, resultsPending = false,
 			paramsAvailable = false;

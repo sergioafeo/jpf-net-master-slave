@@ -12,6 +12,7 @@ import java.rmi.server.UnicastRemoteObject;
 public class RemoteSlave {
 
 	public static void main(String[] args) {
+		System.err.println("Initializing JPF...");
 		Config configSlave = JPF.createConfig(args);
 
 		// Set the configuration parameters
@@ -22,15 +23,23 @@ public class RemoteSlave {
 		// Obtain JPF instance
 		JPF slave = new JPF(configSlave);
 
-		MasterSlaveCommunication slaveInstance = new MasterSlaveCommunication();
-		MasterSlaveCommunication.setInstance(slaveInstance);
 		// Start the communication
 		// Get the RMI infrastructure up and running, connect to the master
 		try {
+			System.err.println("Connecting to master...");
 			Registry registry = LocateRegistry.getRegistry("localhost");
-			IMasterSlaveCommunication stub = (IMasterSlaveCommunication) registry.lookup("RemoteMasterSearch");
+			IMasterSlaveCommunication stub = (IMasterSlaveCommunication) registry
+					.lookup("RemoteMasterSearch");
 			MasterSlaveCommunication.getInstance().setMaster(stub);
-			MasterSlaveCommunication.getInstance().getMaster().setSlave((IMasterSlaveCommunication) UnicastRemoteObject.exportObject(slaveInstance,0));
+			MasterSlaveCommunication
+					.getInstance()
+					.getMaster()
+					.setSlave(
+							(IMasterSlaveCommunication) UnicastRemoteObject
+									.exportObject(MasterSlaveCommunication
+											.getInstance(), 0));
+			System.err.println("Connected to master, launching JPF...");
+			// Launch JPF
 			slave.run();
 		} catch (RemoteException e1) {
 			e1.printStackTrace();
@@ -38,6 +47,10 @@ public class RemoteSlave {
 		} catch (NotBoundException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} finally {
+			System.gc();
+			System.runFinalization();
+			System.exit(0);
 		}
 	}
 }

@@ -20,22 +20,50 @@ public class CommAdapter {
 		this(MasterSlaveCommunication.getInstance());
 	}
 
+	/**
+	 * Slave: tell the master that initialization has completed and search commands can be issued.
+	 * 
+	 * @throws RemoteException
+	 */
 	public void notifyReadyToSearch() throws RemoteException {
 		comm.getMaster().notifyReadyToSearch();		
 	}
 
+	/**
+	 * Slave: Waits for search requests to arrive and retrieves the search command received.
+	 * 
+	 * @return The search parameters received
+	 * @throws RemoteException
+	 */
 	public SearchParamBundle getSearchParams() throws RemoteException {
 		return comm.getSearchParams();
 	}
 
+	/**
+	 * Slave: Notify the master that the search has concluded and transfer the results.
+	 * 
+	 * @param res Search results
+	 * @throws RemoteException
+	 */
 	public void notifySearchFinished(SearchResultBundle res) throws RemoteException {
 		comm.getMaster().notifySearchFinished(res);		
 	}
 
+	/**
+	 * Master: Transfer the search parameters and notify the slave to initiate search.
+	 * 
+	 * @param params Search parameters
+	 * @throws RemoteException
+	 */
 	public void searchSlave(SearchParamBundle params) throws RemoteException {
 		comm.getSlave().searchSlave(params);
 	}
 
+	/**
+	 * Master: Wait for the slave search to complete and retrieve the search results received.
+	 * 
+	 * @return Search results
+	 */
 	public SearchResultBundle getSearchResults() {
 		return comm.getSearchResults();
 	}
