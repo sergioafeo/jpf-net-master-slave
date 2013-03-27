@@ -5,10 +5,9 @@ import java.io.Serializable;
 import gov.nasa.jpf.State;
 
 /**
- * @author Sergio A. Feo
- * 
  * Bundles the payload of a network message and the VM state of the program which sent it.
- *
+ * 
+ * @author Sergio A. Feo
  */
 public class NetworkMessage implements Serializable{
 
