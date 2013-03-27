@@ -26,16 +26,12 @@ public class RemoteMaster {
 
 		// Obtain JPF instance
 		JPF master = new JPF(configMaster);
-		MasterSlaveCommunication serverInstance = new MasterSlaveCommunication();
-		MasterSlaveCommunication.setInstance(serverInstance);
 
-		IMasterSlaveCommunication comm = serverInstance;
 		// Start the communication
 		// Get the RMI infrastructure up and running, export the comm object
-		try {
-			
+		try {			
 			IMasterSlaveCommunication stub = (IMasterSlaveCommunication) UnicastRemoteObject
-					.exportObject(comm, 0);
+					.exportObject(MasterSlaveCommunication.getInstance(), 0);
 			// Bind the remote object's stub in the registry
 			Registry registry = LocateRegistry.getRegistry();
 			registry.rebind("RemoteMasterSearch", stub);
@@ -48,19 +44,26 @@ public class RemoteMaster {
 		}
 		// Finally, launch the master after waiting for the slave to initialize
 		try {
-			while (comm.getSlave() == null) {
+			while (MasterSlaveCommunication.getInstance().getSlave() == null) {
 				try {
 					Thread.sleep(1000);
 				} catch (InterruptedException e) {
 				}
 			}
 			System.err.println("Slave connected, awaiting notification...");
-			comm.readyToSearch();
+			MasterSlaveCommunication.getInstance().readyToSearch();
 			System.err.println("Slave ready, launching JPF...");
 			master.run();
+			LocateRegistry.getRegistry().unbind("RemoteMasterSearch");
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (NotBoundException e) {
+			assert(false) : "Something really is spooky: the remote object was unbound, and it wasn't me.";
+		}
+		finally { // die gracefully
+			System.gc();
+		    System.runFinalization();
+			System.exit(0);
 		}
 	}
 }
