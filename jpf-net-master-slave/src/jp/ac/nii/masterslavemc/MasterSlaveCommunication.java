@@ -3,17 +3,18 @@ package jp.ac.nii.masterslavemc;
 import java.io.Serializable;
 
 /**
- * This is the communication layer between master and slave model
- * checkers
+ * This is the communication layer between master and slave model checkers, implements the remote 
+ * interface IMasterSlaveCommunication to be used for RMI calls.
+ * 
  * @author Sergio A. Feo
  */
-public class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializable {
+class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializable {
 
 	private static final long serialVersionUID = 3953833501640741810L;
 	private static MasterSlaveCommunication instance;
 	private static IMasterSlaveCommunication master, slave;
 
-	public static IMasterSlaveCommunication getInstance() {
+	public static MasterSlaveCommunication getInstance() {
 		return instance;
 	}
 	
