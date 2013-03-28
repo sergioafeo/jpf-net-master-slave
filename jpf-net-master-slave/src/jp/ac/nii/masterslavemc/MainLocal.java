@@ -4,7 +4,6 @@ import java.rmi.RemoteException;
 
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.Config;
-import gov.nasa.jpf.search.Search;
 
 public class MainLocal {
 	private static JPF master, slave;

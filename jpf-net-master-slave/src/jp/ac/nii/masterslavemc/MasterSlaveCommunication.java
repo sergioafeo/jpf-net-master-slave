@@ -119,15 +119,15 @@ class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializabl
 		slaveInitializing = false;
 		notifyAll();
 	}
-
+	
 	@Override
 	public void setSlave(IMasterSlaveCommunication slave) {
-		this.slave = slave;
+		MasterSlaveCommunication.slave = slave;
 	}
-
+	
 	@Override
 	public void setMaster(IMasterSlaveCommunication master) {
-		this.master = master;
+		MasterSlaveCommunication.master = master;
 	}
 
 	public IMasterSlaveCommunication getSlave() {
