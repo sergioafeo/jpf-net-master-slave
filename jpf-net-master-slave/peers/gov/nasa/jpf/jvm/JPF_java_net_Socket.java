@@ -22,6 +22,9 @@ package gov.nasa.jpf.jvm;
 import java.io.IOException;
 import java.net.InetAddress;
 
+import jp.ac.nii.masterslavemc.NetworkLayer;
+import jp.ac.nii.masterslavemc.Channel.ChannelType;
+
 import gov.nasa.jpf.jvm.MJIEnv;
 
 public class JPF_java_net_Socket {
@@ -52,19 +55,9 @@ public class JPF_java_net_Socket {
 	}
 
 	public static void native_Socket____(MJIEnv env, int objRef) {
-//		SocketTreeTable t = SocketTreeTable.getInstance();
 		int id;
-
-		// First time only: Read the configuration file.
-		if (!init) {
-			initialize(env, objRef);
-		}
-
-		// New socket -> add into the socket-tree table.
 		id = env.getIntField(objRef, "socketID");
-//		if (id > t.maxSocketID()) {
-//			t.addSocket();
-//		}
+		NetworkLayer.getInstance().newChannel(ChannelType.CLIENT, id);
 	}
 
 	public static void native_connect__Ljava_net_InetAddress_2I(MJIEnv env, int objRef, int addrRef, int port)
