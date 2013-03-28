@@ -21,8 +21,12 @@ package java.net;
 
 import java.io.IOException;
 
+import jp.ac.nii.masterslavemc.Channel;
+import jp.ac.nii.masterslavemc.NetworkLayer;
+import jp.ac.nii.masterslavemc.Channel.ChannelType;
+
 public class ServerSocket {
-	
+	private static NetworkLayer net = NetworkLayer.getInstance();
 	int port = -1;
 
 	public ServerSocket() {
@@ -31,6 +35,11 @@ public class ServerSocket {
 	
 	public ServerSocket(int port) throws IOException {
 		this.port = port;
+		Channel newSSocket = new Channel(ChannelType.SERVER, port); 
+		if (net.containsKey(newSSocket))
+			throw new IOException();
+		else
+		 net.newChannel(ChannelType.SERVER, port);
 	}
 	
 	public ServerSocket(int port, int backlog) throws IOException {
