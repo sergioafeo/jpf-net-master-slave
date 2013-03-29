@@ -18,4 +18,19 @@ public class NetworkLayer extends ChannelQueues{
 		//  for now a LinkedList seems the most compact in memory
 		this.put(new Channel(socketType, socketID),new LinkedList<NetworkMessage>());
 	}
+	
+	public void newChannel(Channel c){
+		this.put(c, new LinkedList<NetworkMessage>());
+	}
+	
+	/**
+	 * Accepts a socket connection if there is a connection request on the slave, for that, 
+	 * the current queue status is queried, or we trigger a slave search on the port specified. 
+	 * @param port Port number of the ServerSocket
+	 * @return true if the connection was accepted
+	 */
+	public boolean accept(int port) {
+		// TODO Auto-generated method stub
+		return false;
+	}
 }
