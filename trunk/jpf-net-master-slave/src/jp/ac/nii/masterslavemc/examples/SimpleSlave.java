@@ -24,7 +24,7 @@ public class SimpleSlave {
 				if (!reply.equals(msg)) {
 					assert(false);
 				}
-			}
+			} 
 				
 		} catch (IOException e) {
 			e.printStackTrace();

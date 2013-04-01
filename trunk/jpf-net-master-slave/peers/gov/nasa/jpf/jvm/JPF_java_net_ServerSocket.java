@@ -1,6 +1,5 @@
 package gov.nasa.jpf.jvm;
 
-import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 
 import java.io.IOException;
@@ -22,7 +21,7 @@ public class JPF_java_net_ServerSocket {
 		int newSocket = -1;
 		if (net.accept(port)){
 		 newSocket = env.newObject("java.net.Socket");
-		}
+		} else env.getVM().ignoreState();
 		return newSocket;
 	}
 

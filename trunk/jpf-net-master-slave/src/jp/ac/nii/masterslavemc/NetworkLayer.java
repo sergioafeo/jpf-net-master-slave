@@ -1,6 +1,10 @@
 package jp.ac.nii.masterslavemc;
 
+import gov.nasa.jpf.State;
+
+import java.rmi.RemoteException;
 import java.util.LinkedList;
+import java.util.Queue;
 
 import jp.ac.nii.masterslavemc.Channel.ChannelType;
 
@@ -12,6 +16,7 @@ public class NetworkLayer extends ChannelQueues{
 	private static final NetworkLayer instance = new NetworkLayer();
 	private NetworkLayer() {};
 	public static NetworkLayer getInstance() { return instance; }
+	private State slaveState;
 	
 	public void newChannel(ChannelType socketType, int socketID) {
 		//TODO: decide what the best concrete implementation of queues is.
@@ -30,7 +35,34 @@ public class NetworkLayer extends ChannelQueues{
 	 * @return true if the connection was accepted
 	 */
 	public boolean accept(int port) {
-		// TODO Auto-generated method stub
-		return false;
+		SearchParamBundle params = new SearchParamBundle(slaveState, this.getChannel(port, ChannelType.SERVER), (ChannelQueues)this, SearchCommand.SEARCH);
+		try {
+			CommAdapter.getInstance().searchSlave(params);
+			SearchResultBundle results = CommAdapter.getInstance().getSearchResults();
+			if (!results.getSearchResults().get(this.getChannel(port, ChannelType.SERVER)).isEmpty()){
+				
+				return true;
+			}
+			return false;
+		} catch (RemoteException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
 	}
+	
+	public State getSlaveState() {
+		return slaveState;
+	}
+	public void setSlaveState(State slaveState) {
+		this.slaveState = slaveState;
+	}
+	private synchronized Channel getChannel(int id, ChannelType type) {
+		Channel c = new Channel(type, id);
+		if (this.containsKey(c))
+			return c;
+		else
+			return null;
+	}
+	
 }
