@@ -11,12 +11,12 @@ public class SearchParamBundle implements Serializable{
 	 * 
 	 */
 	private static final long serialVersionUID = -6078460271380596549L;
-	private State startState;
+	private int startState;
 	private Channel searchChannel;
 	private ChannelQueues incomingQueues;
 	private SearchCommand command;
 
-	public SearchParamBundle(State slaveState, Channel searchChannel,
+	public SearchParamBundle(int slaveState, Channel searchChannel,
 			ChannelQueues incomingQueues, SearchCommand command) {
 		this.startState = slaveState;
 		this.searchChannel = searchChannel;
@@ -24,11 +24,11 @@ public class SearchParamBundle implements Serializable{
 		this.command = command;
 	}
 
-	public State getStartState() {
+	public int getStartState() {
 		return startState;
 	}
 
-	public void setStartState(State startState) {
+	public void setStartState(int startState) {
 		this.startState = startState;
 	}
 

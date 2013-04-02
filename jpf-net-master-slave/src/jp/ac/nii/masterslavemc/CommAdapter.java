@@ -30,8 +30,8 @@ public class CommAdapter {
 	 * 
 	 * @throws RemoteException
 	 */
-	public void notifyReadyToSearch() throws RemoteException {
-		comm.getMaster().notifyReadyToSearch();		
+	public void notifyReadyToSearch(int stateId) throws RemoteException {
+		comm.getMaster().notifyReadyToSearch(stateId);		
 	}
 
 	/**

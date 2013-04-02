@@ -17,15 +17,14 @@ public class SlaveSearch extends SharedSearch {
 			CommAdapter comm = CommAdapter.getInstance();
 			SearchParamBundle params;
 			boolean done = false;
-			comm.notifyReadyToSearch();
+			comm.notifyReadyToSearch(vm.getStateId());
 			notifySearchStarted();
 			while (!done)
 				try {
 					params = comm.getSearchParams();
 					switch (params.getCommand()) {
 					case SEARCH:
-						System.out.println("I was told to search!!");
-						comm.notifySearchFinished(null);
+						comm.notifySearchFinished(doSearch(params));						
 						break;
 					case FINISH:
 						done = true;
@@ -41,5 +40,62 @@ public class SlaveSearch extends SharedSearch {
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
+	}
+
+	private SearchResultBundle doSearch(SearchParamBundle params) {
+		Channel ch = params.getSearchChannel();
+		NetworkLayer net = NetworkLayer.getInstance();
+		int StartState = params.getStartState();
+		boolean depthLimitReached = false;
+		
+		// Tell the network layer where to stop searching
+		net.setSearchingChannel(ch);
+		// Backtrack to the starting state
+		done  = false;
+		// Search
+		while (!done) {
+		      if (checkAndResetBacktrackRequest() || !isNewState() || isEndState() || isIgnoredState() || depthLimitReached ) {
+		        if (!backtrack()) { // backtrack not possible, done
+		          break;
+		        }
+
+		        depthLimitReached = false;
+		        depth--;
+		        notifyStateBacktracked();
+		      }
+
+		      if (forward()) {
+		        depth++;
+		        notifyStateAdvanced();
+
+		        if (currentError != null){
+		          notifyPropertyViolated();
+
+		          if (hasPropertyTermination()) {
+		            break;
+		          }
+		          // for search.multiple_errors we go on and treat this as a new state
+		          // but hasPropertyTermination() will issue a backtrack request
+		        }
+
+		        if (depth >= depthLimit) {
+		          depthLimitReached = true;
+		          notifySearchConstraintHit("depth limit reached: " + depthLimit);
+		          continue;
+		        }
+
+		        if (!checkStateSpaceLimit()) {
+		          notifySearchConstraintHit("memory limit reached: " + minFreeMemory);
+		          // can't go on, we exhausted our memory
+		          break;
+		        }
+
+		      } else { // forward did not execute any instructions
+		        notifyStateProcessed();
+		      }
+		    }
+		
+		SearchResultBundle results = new SearchResultBundle(net.getSearchResults());
+		return results;
 	}
 }

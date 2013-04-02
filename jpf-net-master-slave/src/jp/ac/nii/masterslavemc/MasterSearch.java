@@ -26,6 +26,9 @@ public class MasterSearch extends SharedSearch {
 	    depth = 0;
 
 	    notifySearchStarted();
+	    
+	    System.err.println("Awaiting slave notification...");
+		int slaveState = MasterSlaveCommunication.getInstance().readyToSearch();
 
 	    while (!done) {
 	      if (checkAndResetBacktrackRequest() || !isNewState() || isEndState() || isIgnoredState() || depthLimitReached ) {
@@ -72,18 +75,12 @@ public class MasterSearch extends SharedSearch {
 	    notifySearchFinished();
 		
 		
-		
-		
 		try {
 		CommAdapter comm = CommAdapter.getInstance();
 		
-		comm.searchSlave(new SearchParamBundle(null, null, null,
-				SearchCommand.SEARCH));
-		SearchResultBundle res = comm.getSearchResults();
 		System.out.println("Search returned!!");
-		comm.searchSlave(new SearchParamBundle(null, null, null,
+		comm.searchSlave(new SearchParamBundle(-1, null, null,
 				SearchCommand.FINISH));
-		notifySearchFinished();
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}

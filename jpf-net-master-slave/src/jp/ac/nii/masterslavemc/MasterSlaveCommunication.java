@@ -1,5 +1,7 @@
 package jp.ac.nii.masterslavemc;
 
+import gov.nasa.jpf.State;
+
 import java.io.Serializable;
 
 /**
@@ -97,25 +99,28 @@ class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializabl
 		return retval;
 	}
 
-	private boolean slaveInitializing = true;;
+	private boolean slaveInitializing = true;
+	private int slaveState;;
 
 	/* (non-Javadoc)
 	 * @see jp.ac.nii.masterslavemc.IMasterSlaveCommunication#readyToSearch()
 	 */
 	@Override
-	public synchronized void readyToSearch() {
+	public synchronized int readyToSearch() {
 		while (slaveInitializing)
 			try {
 				wait();
 			} catch (InterruptedException e) {
 			}
+		return slaveState;
 	}
 
 	/* (non-Javadoc)
 	 * @see jp.ac.nii.masterslavemc.IMasterSlaveCommunication#notifyReadyToSearch()
 	 */
 	@Override
-	public synchronized void notifyReadyToSearch() {
+	public synchronized void notifyReadyToSearch(int stateId) {
+		slaveState = stateId;
 		slaveInitializing = false;
 		notifyAll();
 	}
