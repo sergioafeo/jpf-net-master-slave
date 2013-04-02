@@ -46,9 +46,7 @@ public class RemoteMaster {
 				} catch (InterruptedException e) {
 				}
 			}
-			System.err.println("Slave connected, awaiting notification...");
-			MasterSlaveCommunication.getInstance().readyToSearch();
-			System.err.println("Slave ready, launching JPF...");
+			System.err.println("Slave connected, launching JPF...");
 			master.run();
 			LocateRegistry.getRegistry().unbind("RemoteMasterSearch");
 		} catch (RemoteException e) {

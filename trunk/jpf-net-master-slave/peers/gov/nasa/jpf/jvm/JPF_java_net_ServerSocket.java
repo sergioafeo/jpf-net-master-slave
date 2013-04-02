@@ -9,9 +9,6 @@ import jp.ac.nii.masterslavemc.Channel;
 import jp.ac.nii.masterslavemc.NetworkLayer;
 import jp.ac.nii.masterslavemc.Channel.ChannelType;
 
-//import gov.nasa.jpf.network.SystemInfo;
-//import gov.nasa.jpf.network.cache.CacheLayer;
-
 public class JPF_java_net_ServerSocket {
 	public static final NetworkLayer net = NetworkLayer.getInstance();
 	private static Logger log = JPF.getLogger("gov.nasa.jpf.jvm");

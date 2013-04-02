@@ -13,9 +13,13 @@ interface IMasterSlaveCommunication extends Remote{
 
 	SearchParamBundle getSearchParams() throws RemoteException;
 
-	void readyToSearch() throws RemoteException;
+	/**
+	 * @return the stateId of the starting state of the slave.
+	 * @throws RemoteException
+	 */
+	int readyToSearch() throws RemoteException;
 
-	void notifyReadyToSearch() throws RemoteException;
+	void notifyReadyToSearch(int id) throws RemoteException;
 	
 	void setSlave(IMasterSlaveCommunication slave) throws RemoteException;
 	
