@@ -19,8 +19,6 @@
 
 package java.net;
 
-import gov.nasa.jpf.jvm.Verify;
-
 import java.io.*;
 
 
@@ -30,17 +28,7 @@ public class Socket {
 	
 	int socketID;
 
-	static boolean exception_simulation;
-
-	static boolean main_termination;
-
-//	CacheLayerInputStream in;
-
-	static {
-		Object lock = new Object();
-
-//		CacheLayerInputStream.setLock(lock);
-	}
+	NetworkLayerInputStream in;
 
 	public Socket() {
 		socketID = numSocket++;
@@ -86,46 +74,19 @@ public class Socket {
 	}
 
 	public InputStream getInputStream() throws IOException {
-//		CacheLayerInputStream in = new CacheLayerInputStream(socketID);
-
-//		in.setSimulatedException(exception_simulation);
-//		in.setMain_termination(main_termination);
-//		this.in = in;
-		return new InputStream() {
-			
-			@Override
-			public int read() throws IOException {
-				// TODO Auto-generated method stub
-				return 0;
-			}
-		};
+		if (in == null) {
+			NetworkLayerInputStream in = new NetworkLayerInputStream(socketID);
+			this.in = in;
+		}
+		return in;
 	}
 
 	public OutputStream getOutputStream() throws IOException {
-//		CacheLayerOutputStream out = new CacheLayerOutputStream(socketID);
-//
-//		out.setSimulatedException(exception_simulation);
-//		out.setMain_termination(main_termination);
-		return new OutputStream() {
-			
-			@Override
-			public void write(int arg0) throws IOException {
-				// TODO Auto-generated method stub
-				
-			}
-		};
+		NetworkLayerOutputStream out = new NetworkLayerOutputStream(socketID);
+		return out;
 	}
 
 	public void connect(SocketAddress endpoint) throws IOException {
-		// -- properties dependent --
-		if (exception_simulation) {
-			boolean exception = Verify.getBoolean();
-
-			if (exception)
-				throw new IOException("[Simulated] an error occurs during the connection");
-		}
-		// -- properties dependent --
-
 		if (endpoint instanceof InetSocketAddress) {
 			InetSocketAddress inet = (InetSocketAddress) endpoint;
 

@@ -29,31 +29,6 @@ import gov.nasa.jpf.jvm.MJIEnv;
 
 public class JPF_java_net_Socket {
 
-	private static boolean init = false;
-	
-	/**
-	 * This field must be set by "CacheNotifier".
-	 */
-	private static boolean exception_sim = false;
-	
-	/**
-	 * This field must be set by "CacheNotifier".
-	 */
-	private static boolean main_termination = true;
-
-	/**
-	 * Set the static fields in "Socket" depending on a configuration.
-	 * 
-	 * @param env
-	 * @param objRef
-	 */
-	private static void initialize(MJIEnv env, int objRef) {
-		env.setStaticBooleanField("java.net.Socket", "exception_simulation", exception_sim);
-		env.setStaticBooleanField("java.net.Socket", "main_termination", main_termination);
-		
-		init = true;
-	}
-
 	public static void native_Socket____(MJIEnv env, int objRef) {
 		int id;
 		id = env.getIntField(objRef, "socketID");
@@ -62,7 +37,11 @@ public class JPF_java_net_Socket {
 
 	public static void native_connect__Ljava_net_InetAddress_2I(MJIEnv env, int objRef, int addrRef, int port)
 			throws IOException {
-//		CacheLayer cl;
+
+		int id;
+		id = env.getIntField(objRef, "socketID");
+		NetworkLayer.getInstance().newChannel(ChannelType.CLIENT, id);
+		
 		InetAddress addr;
 		byte[] ip;
 		int address_ref;
@@ -142,13 +121,4 @@ public class JPF_java_net_Socket {
 
 //		CacheLayer.getInstance().close(sock_id);
 	}
-
-	public static void setExceptionSim(boolean exceptionSim) {
-		exception_sim = exceptionSim;
-	}
-
-	public static void setMainTermination(boolean mainTermination) {
-		main_termination = mainTermination;
-	}
-
 }
