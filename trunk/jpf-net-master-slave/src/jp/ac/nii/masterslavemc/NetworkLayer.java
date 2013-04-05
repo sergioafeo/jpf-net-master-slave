@@ -1,11 +1,10 @@
 package jp.ac.nii.masterslavemc;
 
-import gov.nasa.jpf.State;
-
 import java.rmi.RemoteException;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
+import java.util.Set;
+import java.util.Vector;
 
 import jp.ac.nii.masterslavemc.Channel.ChannelType;
 
@@ -25,7 +24,9 @@ public class NetworkLayer extends ChannelQueues {
 
 	private int slaveState;
 
-	private Channel searchingChannel;
+	private boolean slave = false;
+	
+	private SearchParamBundle searchParams;
 
 	public void newChannel(ChannelType socketType, int socketID) {
 		// TODO: decide what the best concrete implementation of queues is.
@@ -45,25 +46,24 @@ public class NetworkLayer extends ChannelQueues {
 	 * 
 	 * @param port
 	 *            Port number of the ServerSocket
-	 * @return true if the connection was accepted
+	 * @return the socketID of the remote socket that initiated a connection
 	 */
-	public boolean accept(int port) {
-		SearchParamBundle params = new SearchParamBundle(slaveState,
-				this.getChannel(port, ChannelType.SERVER),
+	public Set<NetworkMessage> accept(int port) {
+		SearchParamBundle params = new SearchParamBundle(slaveState, 
+				this.getChannel(port, ChannelType.SERVER), true,
 				(ChannelQueues) this, SearchCommand.SEARCH);
 		try {
 			CommAdapter.getInstance().searchSlave(params);
 			SearchResultBundle results = CommAdapter.getInstance()
 					.getSearchResults();
-			if (results!=null && !results.getSearchResults()
-					.get(this.getChannel(port, ChannelType.SERVER)).isEmpty()) {
-				return true;
+			if (results!=null && !results.getSearchResults().isEmpty()) {
+				return results.getSearchResults().keySet();
 			}
-			return false;
+			return null;
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-			return false;
+			return null;
 		}
 	}
 
@@ -85,12 +85,28 @@ public class NetworkLayer extends ChannelQueues {
 
 	Map<NetworkMessage, ChannelQueues> searchResults;
 	
-	public void setSearchingChannel(Channel ch) {
-		this.searchingChannel = ch;
-		this.searchResults.clear();
-	}
-	
 	public Map<NetworkMessage, ChannelQueues> getSearchResults(){
 		return searchResults;
+	}
+
+	public SearchParamBundle getSearchParams() {
+		return searchParams;
+	}
+
+	public void setSearchParams(SearchParamBundle searchParams) {
+		this.searchParams = searchParams;
+	}
+
+	public boolean isSlave() {
+		return slave;
+	}
+
+	/**
+	 * Set to true to configure the network layer as slave.
+	 * 
+	 * @param slave
+	 */
+	public void setSlave(boolean slave) {
+		this.slave = slave;
 	}
 }

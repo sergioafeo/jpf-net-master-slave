@@ -62,6 +62,7 @@ public class CommAdapter {
 	 */
 	public void searchSlave(SearchParamBundle params) throws RemoteException {
 		comm.getSlave().searchSlave(params);
+		comm.setSlaveRunning(true);
 	}
 
 	/**

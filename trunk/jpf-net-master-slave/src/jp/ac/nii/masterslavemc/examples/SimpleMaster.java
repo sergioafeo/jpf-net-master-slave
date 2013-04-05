@@ -1,12 +1,10 @@
 package jp.ac.nii.masterslavemc.examples;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-
 
 class WorkerThread implements Runnable {
 	private Socket mySocket;
@@ -16,23 +14,22 @@ class WorkerThread implements Runnable {
 	}
 
 	public void run() {
-		BufferedReader input = null;
-		PrintWriter output = null;
+		InputStream input = null;
+		OutputStream output = null;
 		try {
-			input = new BufferedReader(new InputStreamReader(
-					mySocket.getInputStream()));
-			output = new PrintWriter(mySocket.getOutputStream());
+			input = mySocket.getInputStream();
+			output = mySocket.getOutputStream();
 		} catch (IOException e1) {
 			return;
 		}
 
 		while (true)
 			try {
-				String msg = input.readLine();
-				if (msg.equals("FAIL")) {
+				int msg = input.read();
+				if (msg == -1) {
 					assert (false);
 				} else
-					output.println(msg);
+					output.write(msg);
 			} catch (IOException e) {
 				break;
 			}

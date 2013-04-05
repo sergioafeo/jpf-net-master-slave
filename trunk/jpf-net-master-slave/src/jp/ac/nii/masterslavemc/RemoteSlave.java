@@ -23,6 +23,9 @@ public class RemoteSlave {
 		// Obtain JPF instance
 		JPF slave = new JPF(configSlave);
 
+		// Configure the local network layer
+		NetworkLayer.getInstance().setSlave(true);
+				
 		// Start the communication
 		// Get the RMI infrastructure up and running, connect to the master
 		try {

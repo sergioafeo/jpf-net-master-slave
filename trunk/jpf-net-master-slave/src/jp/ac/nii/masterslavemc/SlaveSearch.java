@@ -24,7 +24,8 @@ public class SlaveSearch extends SharedSearch {
 					params = comm.getSearchParams();
 					switch (params.getCommand()) {
 					case SEARCH:
-						comm.notifySearchFinished(doSearch(params));						
+						SearchResultBundle res = doSearch(params);
+						comm.notifySearchFinished(res);						
 						break;
 					case FINISH:
 						done = true;
@@ -43,14 +44,13 @@ public class SlaveSearch extends SharedSearch {
 	}
 
 	private SearchResultBundle doSearch(SearchParamBundle params) {
-		Channel ch = params.getSearchChannel();
 		NetworkLayer net = NetworkLayer.getInstance();
 		int StartState = params.getStartState();
 		boolean depthLimitReached = false;
 		
 		// Tell the network layer where to stop searching
-		net.setSearchingChannel(ch);
-		// Backtrack to the starting state
+		net.setSearchParams(params);
+		// TODO: Backtrack to the starting state
 		done  = false;
 		// Search
 		while (!done) {

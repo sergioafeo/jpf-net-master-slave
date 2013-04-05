@@ -25,8 +25,13 @@ class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializabl
 	
 	private MasterSlaveCommunication() {};
 
-	private boolean slaveRunning = false, resultsPending = false,
-			paramsAvailable = false;
+	private boolean slaveRunning = false;
+	
+	protected void setSlaveRunning(boolean slaveRunning) {
+		this.slaveRunning = slaveRunning;
+	}
+
+	private boolean paramsAvailable = false;
 	private SearchParamBundle searchParams;
 
 	/* (non-Javadoc)
@@ -55,14 +60,14 @@ class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializabl
 	 */
 	@Override
 	public synchronized void notifySearchFinished(SearchResultBundle result) {
-		while (resultsPending)
-			try {
-				wait();
-			} catch (InterruptedException e) {
-			}	
+//		while (resultsPending)
+//			try {
+//				wait();
+//			} catch (InterruptedException e) {
+//			}	
 		searchResult = result;
 		slaveRunning = false;
-		resultsPending = true;
+//		resultsPending = true;
 		notifyAll();
 	}
 
@@ -78,8 +83,7 @@ class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializabl
 			}
 		}
 		SearchResultBundle retval = searchResult;
-		resultsPending = false;
-		notifyAll();
+//		resultsPending = false;
 		return retval;
 	}
 
