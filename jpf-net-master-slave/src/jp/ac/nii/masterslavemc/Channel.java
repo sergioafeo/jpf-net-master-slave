@@ -26,10 +26,16 @@ public class Channel implements Serializable{
 		this.id = id;
 	}
 	
+	@Override
 	public boolean equals(Object x){
 		if (x instanceof Channel)
 			return ((Channel)x).type == type && ((Channel)x).id==id;
 		return false;
+	}
+
+	@Override
+	public int hashCode() {
+		return type.ordinal() * 127 + id * 3571;
 	}
 
 	public ChannelType getType() {

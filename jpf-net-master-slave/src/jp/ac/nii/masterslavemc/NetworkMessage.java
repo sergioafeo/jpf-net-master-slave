@@ -2,8 +2,6 @@ package jp.ac.nii.masterslavemc;
 
 import java.io.Serializable;
 
-import gov.nasa.jpf.State;
-
 /**
  * Bundles the payload of a network message and the VM state of the program which sent it.
  * 
@@ -13,30 +11,44 @@ public class NetworkMessage implements Serializable{
 
 	private static final long serialVersionUID = -4055812705206158686L;
 
+	private Channel origin;
+	public Channel getOrigin() {
+		return origin;
+	}
+	public void setOrigin(Channel origin) {
+		this.origin = origin;
+	}
 	/**
 	 * Payload of the network message
 	 */
-	private byte[] contents;
+	private byte contents;
+	private boolean connect;
 	
+	public boolean isConnect() {
+		return connect;
+	}
+	public void setConnect(boolean connect) {
+		this.connect = connect;
+	}
 	/**
 	 * VM State of the slave after sending the message
 	 */
-	private State state;
-	public NetworkMessage(byte[] contents, State state) {
+	private int state;
+	public NetworkMessage(byte contents, int state) {
 		super();
 		this.contents = contents;
 		this.state = state;
 	}
-	public byte[] getContents() {
+	public byte getContents() {
 		return contents;
 	}
-	public State getState() {
+	public int getState() {
 		return state;
 	}
-	public void setContents(byte[] contents) {
+	public void setContents(byte contents) {
 		this.contents = contents;
 	}
-	public void setState(State state) {
+	public void setState(int state) {
 		this.state = state;
 	}
 }

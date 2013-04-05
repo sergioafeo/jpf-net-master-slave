@@ -1,5 +1,7 @@
 package java.net;
 
+import gov.nasa.jpf.jvm.Verify;
+
 import java.io.IOException;
 import java.net.InetAddress;
 
@@ -37,10 +39,12 @@ public class ServerSocket implements java.io.Closeable{
 	
 	// Methods
 	
-	public native Socket native_accept();
+	public native Socket[] native_accept();
 	
 	public Socket accept() throws IOException {
-		return native_accept();
+		Socket[] sockets = native_accept();
+		int index = Verify.getInt(0, sockets.length-1);
+		return sockets[index];
 	}
 
 	@Override

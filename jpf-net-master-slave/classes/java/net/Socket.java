@@ -30,6 +30,10 @@ public class Socket {
 
 	NetworkLayerInputStream in;
 
+	public Socket(int id) {
+		socketID = id;
+	}
+	
 	public Socket() {
 		socketID = numSocket++;
 		native_Socket();

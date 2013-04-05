@@ -15,9 +15,11 @@ public class SearchParamBundle implements Serializable{
 	private Channel searchChannel;
 	private ChannelQueues incomingQueues;
 	private SearchCommand command;
+	private boolean connectAction;
 
-	public SearchParamBundle(int slaveState, Channel searchChannel,
+	public SearchParamBundle(int slaveState, Channel searchChannel, boolean connectAction,
 			ChannelQueues incomingQueues, SearchCommand command) {
+		this.setConnectAction(connectAction);
 		this.startState = slaveState;
 		this.searchChannel = searchChannel;
 		this.incomingQueues = incomingQueues;
@@ -54,6 +56,14 @@ public class SearchParamBundle implements Serializable{
 
 	public void setCommand(SearchCommand command) {
 		this.command = command;
+	}
+
+	public boolean isConnectAction() {
+		return connectAction;
+	}
+
+	public void setConnectAction(boolean connectAction) {
+		this.connectAction = connectAction;
 	}
 
 }

@@ -23,6 +23,9 @@ public class RemoteMaster {
 		// Obtain JPF instance
 		JPF master = new JPF(configMaster);
 
+		// Configure the local network layer
+		NetworkLayer.getInstance().setSlave(false);
+		
 		// Start the communication
 		// Get the RMI infrastructure up and running, export the comm object
 		try {			
