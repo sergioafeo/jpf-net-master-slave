@@ -1,8 +1,14 @@
 package jp.ac.nii.masterslavemc;
 
+import gov.nasa.jpf.JPF;
+import gov.nasa.jpf.jvm.MJIEnv;
+import gov.nasa.jpf.util.JPFLogger;
+
 import java.rmi.RemoteException;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Queue;
 import java.util.Set;
 import java.util.Vector;
 
@@ -10,12 +16,14 @@ import jp.ac.nii.masterslavemc.Channel.ChannelType;
 
 public class NetworkLayer extends ChannelQueues {
 
+	private transient JPFLogger log = JPF.getLogger("jp.ac.nii.masterslavemc.NetworkLayer");
 	private static final long serialVersionUID = -5989864108646342444L;
 
 	// Singleton
 	private static final NetworkLayer instance = new NetworkLayer();
 
 	private NetworkLayer() {
+		log.info("Network layer initialized.");
 	};
 
 	public static NetworkLayer getInstance() {
@@ -31,7 +39,7 @@ public class NetworkLayer extends ChannelQueues {
 	public void newChannel(ChannelType socketType, int socketID) {
 		// TODO: decide what the best concrete implementation of queues is.
 		// for now a LinkedList seems the most compact in memory
-		this.put(new Channel(socketType, socketID),
+		this.put(Channel.get(socketType, socketID),
 				new LinkedList<NetworkMessage>());
 	}
 
@@ -56,12 +64,11 @@ public class NetworkLayer extends ChannelQueues {
 			CommAdapter.getInstance().searchSlave(params);
 			SearchResultBundle results = CommAdapter.getInstance()
 					.getSearchResults();
-			if (results!=null && !results.getSearchResults().isEmpty()) {
+			if (results.getSearchResults()!=null && !results.getSearchResults().isEmpty()) {
 				return results.getSearchResults().keySet();
 			}
 			return null;
 		} catch (RemoteException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return null;
 		}
@@ -76,14 +83,14 @@ public class NetworkLayer extends ChannelQueues {
 	}
 
 	private synchronized Channel getChannel(int id, ChannelType type) {
-		Channel c = new Channel(type, id);
+		Channel c = Channel.get(type, id);
 		if (this.containsKey(c))
 			return c;
 		else
 			return null;
 	}
 
-	Map<NetworkMessage, ChannelQueues> searchResults;
+	Map<NetworkMessage, ChannelQueues> searchResults = new HashMap<NetworkMessage, ChannelQueues>();
 	
 	public Map<NetworkMessage, ChannelQueues> getSearchResults(){
 		return searchResults;
@@ -108,5 +115,23 @@ public class NetworkLayer extends ChannelQueues {
 	 */
 	public void setSlave(boolean slave) {
 		this.slave = slave;
+		if (slave)
+			log.info("Network layer set to SLAVE mode.");
+		else 
+			log.info("Network layer set to MASTER mode.");
+	}
+
+	public void connect(MJIEnv env, int id, int port) {
+		Queue<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,id));
+		NetworkMessage msg = new NetworkMessage(0, true, Channel.get(ChannelType.CLIENT,id), env.getVM().getStateId());
+		Q.add(msg);
+		
+		if (slave){			
+			// If this is what we were searching for
+			if (searchParams.getSearchChannel().getType() == ChannelType.SERVER && port == searchParams.getSearchChannel().getId()){
+				searchResults.put(msg, (ChannelQueues) this.clone());
+				env.getVM().ignoreState(); // Stop the search here
+			}
+		}
 	}
 }

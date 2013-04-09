@@ -21,7 +21,7 @@ public class NetworkMessage implements Serializable{
 	/**
 	 * Payload of the network message
 	 */
-	private byte contents;
+	private int contents;
 	private boolean connect;
 	
 	public boolean isConnect() {
@@ -34,12 +34,14 @@ public class NetworkMessage implements Serializable{
 	 * VM State of the slave after sending the message
 	 */
 	private int state;
-	public NetworkMessage(byte contents, int state) {
+	public NetworkMessage(int contents, boolean connect, Channel origin, int state) {
 		super();
+		this.connect = connect;
 		this.contents = contents;
 		this.state = state;
+		this.origin = origin;
 	}
-	public byte getContents() {
+	public int getContents() {
 		return contents;
 	}
 	public int getState() {
@@ -50,5 +52,12 @@ public class NetworkMessage implements Serializable{
 	}
 	public void setState(int state) {
 		this.state = state;
+	}
+	
+	@Override
+	public String toString(){
+		if(connect)
+			return "["+origin+":CONNECT]@"+state;
+		return "["+origin+":"+contents+"]@"+state;
 	}
 }

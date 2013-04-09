@@ -1,6 +1,8 @@
 package jp.ac.nii.masterslavemc;
 
+import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.State;
+import gov.nasa.jpf.util.JPFLogger;
 
 import java.io.Serializable;
 
@@ -11,7 +13,7 @@ import java.io.Serializable;
  * @author Sergio A. Feo
  */
 class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializable {
-
+	private transient JPFLogger log = JPF.getLogger("jp.ac.nii.masterslavemc.MasterSlaveCommunication");
 	private static final long serialVersionUID = 3953833501640741810L;
 	private static final MasterSlaveCommunication instance = new MasterSlaveCommunication();
 	private static IMasterSlaveCommunication master, slave;
@@ -65,6 +67,7 @@ class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializabl
 //				wait();
 //			} catch (InterruptedException e) {
 //			}	
+		log.info("Completed search notification received.");
 		searchResult = result;
 		slaveRunning = false;
 //		resultsPending = true;
@@ -124,6 +127,7 @@ class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializabl
 	 */
 	@Override
 	public synchronized void notifyReadyToSearch(int stateId) {
+		log.info("Ready to search notification received.");
 		slaveState = stateId;
 		slaveInitializing = false;
 		notifyAll();

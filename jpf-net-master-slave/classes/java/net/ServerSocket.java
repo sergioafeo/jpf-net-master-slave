@@ -39,12 +39,12 @@ public class ServerSocket implements java.io.Closeable{
 	
 	// Methods
 	
-	public native Socket[] native_accept();
+	public native int[] native_accept() throws IOException;
 	
 	public Socket accept() throws IOException {
-		Socket[] sockets = native_accept();
+		int[] sockets = native_accept();
 		int index = Verify.getInt(0, sockets.length-1);
-		return sockets[index];
+		return new Socket(sockets[index]);
 	}
 
 	@Override
