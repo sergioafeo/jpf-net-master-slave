@@ -1,6 +1,8 @@
 package jp.ac.nii.masterslavemc;
 
+import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.jvm.RestorableVMState;
+import gov.nasa.jpf.util.JPFLogger;
 
 import java.rmi.RemoteException;
 import java.util.HashMap;
@@ -14,6 +16,7 @@ import java.util.Map;
  * @author Sergio A. Feo
  */
 public class CommAdapter {
+	private transient JPFLogger log = JPF.getLogger("jp.ac.nii.masterslavemc.CommAdapter");
 	private MasterSlaveCommunication comm;
 	private Map<Integer, RestorableVMState> stateMap;
 	private static final CommAdapter instance = new CommAdapter();
@@ -36,8 +39,9 @@ public class CommAdapter {
 	 * 
 	 * @throws RemoteException
 	 */
-	public void notifyReadyToSearch(int stateId) throws RemoteException {
+	public void notifyReadyToSearch(int stateId) throws RemoteException {		
 		comm.getMaster().notifyReadyToSearch(stateId);		
+		log.info("Notified ready to search, state: "+stateId);
 	}
 
 	/**
@@ -57,6 +61,7 @@ public class CommAdapter {
 	 * @throws RemoteException
 	 */
 	public void notifySearchFinished(SearchResultBundle res) throws RemoteException {
+		log.info("Notified master of finished search.");
 		comm.getMaster().notifySearchFinished(res);		
 	}
 
@@ -67,6 +72,7 @@ public class CommAdapter {
 	 * @throws RemoteException
 	 */
 	public void searchSlave(SearchParamBundle params) throws RemoteException {
+		log.info("Slave search initiated: "+params.getCommand());
 		comm.getSlave().searchSlave(params);
 		comm.setSlaveRunning(true);
 	}

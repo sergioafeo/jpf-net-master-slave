@@ -32,6 +32,7 @@ public class Socket {
 
 	public Socket(int id) {
 		socketID = id;
+		numSocket = id+1;
 	}
 	
 	public Socket() {

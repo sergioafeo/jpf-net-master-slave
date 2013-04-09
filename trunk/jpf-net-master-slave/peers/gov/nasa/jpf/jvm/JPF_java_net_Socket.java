@@ -40,25 +40,8 @@ public class JPF_java_net_Socket {
 
 		int id;
 		id = env.getIntField(objRef, "socketID");
-		NetworkLayer.getInstance().newChannel(ChannelType.CLIENT, id);
-		
-		InetAddress addr;
-		byte[] ip;
-		int address_ref;
-
-		// Virtualized mode: The cache must connect to a real IP address.
-		// If the address is not specified, use localhost.
-//		if (CacheLayer.isVirtualMode() && addrRef > 0) {
-			address_ref = env.getReferenceField(addrRef, "address");
-			ip = env.getByteArrayObject(address_ref);
-			addr = InetAddress.getByAddress(ip);
-//		} else
-//			addr = InetAddress.getLocalHost();
-
-		int sock_id = env.getIntField(objRef, "socketID");
-
-//		cl = CacheLayer.getInstance();
-//		cl.connect(sock_id, addr, port);
+		// Ignore addresses for now
+		NetworkLayer.getInstance().connect(env,id,port);
 	}
 
 	public static boolean isMainAlive(MJIEnv env, int objRef) {
