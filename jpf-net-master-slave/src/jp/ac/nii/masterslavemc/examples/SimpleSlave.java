@@ -21,7 +21,7 @@ public class SimpleSlave {
 				output.write(msg);
 				int reply = input.read();
 				if (reply != msg) {
-					assert(false);
+					//assert(false);
 				}
 			} 
 				

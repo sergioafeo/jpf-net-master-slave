@@ -21,13 +21,15 @@ public class MasterSearch extends SharedSearch {
 
 	@Override
 	public void search() {
+		CommAdapter comm = CommAdapter.getInstance();
 		boolean depthLimitReached = false;
 
 	    depth = 0;
 
 	    System.err.println("Awaiting slave notification...");
-		int slaveState = MasterSlaveCommunication.getInstance().readyToSearch();
-
+		NetworkLayer.getInstance().setSlaveState(MasterSlaveCommunication.getInstance().readyToSearch());
+		
+		log.info("Slave reported ready. Master search started.");
 	    notifySearchStarted();
 	    
 	    while (!done) {
@@ -75,11 +77,9 @@ public class MasterSearch extends SharedSearch {
 	    notifySearchFinished();
 		
 		
-		try {
-		CommAdapter comm = CommAdapter.getInstance();
-		
-		System.out.println("Search returned!!");
-		comm.searchSlave(new SearchParamBundle(-1, null, false, null,
+		try {	
+		log.info("Search finished, sending termination command to slave.");
+		comm.searchSlave(new SearchParamBundle(0, null, false, null,
 				SearchCommand.FINISH));
 		} catch (RemoteException e) {
 			e.printStackTrace();

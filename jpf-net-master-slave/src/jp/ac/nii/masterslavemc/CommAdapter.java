@@ -1,6 +1,10 @@
 package jp.ac.nii.masterslavemc;
 
+import gov.nasa.jpf.jvm.RestorableVMState;
+
 import java.rmi.RemoteException;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Provides the user API for communicating between master and slave model checkers.
@@ -11,10 +15,12 @@ import java.rmi.RemoteException;
  */
 public class CommAdapter {
 	private MasterSlaveCommunication comm;
+	private Map<Integer, RestorableVMState> stateMap;
 	private static final CommAdapter instance = new CommAdapter();
 	
 	private CommAdapter(MasterSlaveCommunication comm) {
 		this.comm = comm;
+		stateMap = new HashMap<Integer, RestorableVMState>();
 	}
 	
 	private CommAdapter() {
@@ -72,6 +78,10 @@ public class CommAdapter {
 	 */
 	public SearchResultBundle getSearchResults() {
 		return comm.getSearchResults();
+	}
+
+	public Map<Integer, RestorableVMState> getStateMap() {
+		return stateMap ;
 	}
 	
 }
