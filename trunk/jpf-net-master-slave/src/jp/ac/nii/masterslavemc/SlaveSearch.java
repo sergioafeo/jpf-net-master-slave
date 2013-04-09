@@ -1,9 +1,13 @@
 package jp.ac.nii.masterslavemc;
 
 import java.rmi.RemoteException;
+import java.util.Map;
 
 import gov.nasa.jpf.Config;
+import gov.nasa.jpf.JPF;
+import gov.nasa.jpf.JPFException;
 import gov.nasa.jpf.jvm.JVM;
+import gov.nasa.jpf.jvm.RestorableVMState;
 
 public class SlaveSearch extends SharedSearch {
 
@@ -13,23 +17,31 @@ public class SlaveSearch extends SharedSearch {
 
 	@Override
 	public void search() {
-		try {
-			CommAdapter comm = CommAdapter.getInstance();
-			SearchParamBundle params;
-			boolean done = false;
+		CommAdapter comm = CommAdapter.getInstance();
+		stateMap = comm.getStateMap();
+		SearchParamBundle params;
+
+		boolean done = false;
+		
+		try {	
+			// Store the initial state in our map
+			stateMap.put(vm.getStateId(), vm.getRestorableState());
 			comm.notifyReadyToSearch(vm.getStateId());
+			log.info("Slave search started.");
 			notifySearchStarted();
 			while (!done)
 				try {
 					params = comm.getSearchParams();
 					switch (params.getCommand()) {
 					case SEARCH:
+						log.fine("Search request received.");
 						SearchResultBundle res = doSearch(params);
-						comm.notifySearchFinished(res);						
+						comm.notifySearchFinished(res);		
+						log.fine("Search results sent.");
 						break;
 					case FINISH:
 						done = true;
-						System.out.println("Slave search terminated!!");
+						log.info("Slave search terminated!!");
 						break;
 					default:
 						break;
@@ -39,11 +51,28 @@ public class SlaveSearch extends SharedSearch {
 				}
 			notifySearchFinished();
 		} catch (RemoteException e) {
-			e.printStackTrace();
+			e.printStackTrace();			
+		} catch(Exception e) {
+			log.info("Error caught during search:" + e.getLocalizedMessage());
+			try {
+				comm.notifySearchFinished(null);
+			} catch (RemoteException e1) {
+				e1.printStackTrace();
+			}
 		}
 	}
 
+	private Map<Integer, RestorableVMState> stateMap;
+	
+	/**
+	 * Do a normal DFS search after restoring the VM to the state specified by the master.
+	 * The search finishes when a write operation on a specified channel is found.
+	 * 
+	 * @param params Search parameters
+	 * @return The set of network messages
+	 */
 	private SearchResultBundle doSearch(SearchParamBundle params) {
+				
 		NetworkLayer net = NetworkLayer.getInstance();
 		int StartState = params.getStartState();
 		boolean depthLimitReached = false;
@@ -51,6 +80,10 @@ public class SlaveSearch extends SharedSearch {
 		// Tell the network layer where to stop searching
 		net.setSearchParams(params);
 		// TODO: Backtrack to the starting state
+		if (stateMap.get(StartState) != null)
+			vm.restoreState(stateMap.get(StartState));
+		else
+			throw new JPFException("Master specified an inexistent state:" + StartState);
 		done  = false;
 		// Search
 		while (!done) {
