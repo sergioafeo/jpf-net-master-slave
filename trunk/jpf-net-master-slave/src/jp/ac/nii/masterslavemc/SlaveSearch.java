@@ -1,7 +1,9 @@
 package jp.ac.nii.masterslavemc;
 
 import java.rmi.RemoteException;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
@@ -11,6 +13,8 @@ import gov.nasa.jpf.jvm.RestorableVMState;
 
 public class SlaveSearch extends SharedSearch {
 
+	private Set<SearchParamBundle> searchCache = new HashSet<SearchParamBundle>();
+	
 	public SlaveSearch(Config config, JVM vm) {
 		super(config, vm);
 	}
@@ -18,15 +22,14 @@ public class SlaveSearch extends SharedSearch {
 	@Override
 	public void search() {
 		CommAdapter comm = CommAdapter.getInstance();
-		stateMap = comm.getStateMap();
 		SearchParamBundle params;
 
 		boolean done = false;
 		
 		try {	
 			// Store the initial state in our map
-			stateMap.put(vm.getStateId(), vm.getRestorableState());
-			comm.notifyReadyToSearch(vm.getStateId());
+			int startId = NetworkLayer.getInstance().addState(vm.getRestorableState());
+			comm.notifyReadyToSearch(startId);
 			log.info("Slave search started.");
 			notifySearchStarted();
 			while (!done)
@@ -61,8 +64,8 @@ public class SlaveSearch extends SharedSearch {
 			}
 		}
 	}
-
-	private Map<Integer, RestorableVMState> stateMap;
+	
+	private NetworkLayer net = NetworkLayer.getInstance();
 	
 	/**
 	 * Do a normal DFS search after restoring the VM to the state specified by the master.
@@ -72,18 +75,23 @@ public class SlaveSearch extends SharedSearch {
 	 * @return The set of network messages
 	 */
 	private SearchResultBundle doSearch(SearchParamBundle params) {
-				
-		NetworkLayer net = NetworkLayer.getInstance();
-		int StartState = params.getStartState();
+
+		// Check whether we have seen this search before
+		if (searchCache.contains(params))
+			return new SearchResultBundle(null);
+		
+		int startState = params.getStartState();
 		boolean depthLimitReached = false;
 		
 		// Tell the network layer where to stop searching
 		net.setSearchParams(params);
-		// TODO: Backtrack to the starting state
-		if (stateMap.get(StartState) != null)
-			vm.restoreState(stateMap.get(StartState));
+		// Backtrack to the starting state
+		RestorableVMState s = net.getState(startState);
+		depth = 0;
+		if (s != null)
+			vm.restoreState(s);
 		else
-			throw new JPFException("Master specified an inexistent state:" + StartState);
+			throw new JPFException("Master specified an inexistent state:" + startState);
 		done  = false;
 		// Search
 		while (!done) {
