@@ -2,9 +2,11 @@ package jp.ac.nii.masterslavemc;
 
 import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.jvm.MJIEnv;
+import gov.nasa.jpf.jvm.RestorableVMState;
 import gov.nasa.jpf.util.JPFLogger;
 
 import java.rmi.RemoteException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
@@ -91,6 +93,7 @@ public class NetworkLayer extends ChannelQueues {
 	}
 
 	Map<NetworkMessage, ChannelQueues> searchResults = new HashMap<NetworkMessage, ChannelQueues>();
+	private Map<Integer,RestorableVMState> stateRepository = new HashMap<Integer, RestorableVMState>();
 	
 	public Map<NetworkMessage, ChannelQueues> getSearchResults(){
 		return searchResults;
@@ -122,16 +125,56 @@ public class NetworkLayer extends ChannelQueues {
 	}
 
 	public void connect(MJIEnv env, int id, int port) {
+		// Get the queue for the current socket
 		Queue<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,id));
-		NetworkMessage msg = new NetworkMessage(0, true, Channel.get(ChannelType.CLIENT,id), env.getVM().getStateId());
+		// We may Remember this state, make room for it in the repository
+		int stateId = stateRepository.size();
+		stateRepository.put(stateId, null);
+		// Create new CONNECT network message and put in on the corresponding queue
+		NetworkMessage msg = new NetworkMessage(0, true, Channel.get(ChannelType.CLIENT,id), stateId);
 		Q.add(msg);
 		
 		if (slave){			
 			// If this is what we were searching for
 			if (searchParams.getSearchChannel().getType() == ChannelType.SERVER && port == searchParams.getSearchChannel().getId()){
-				searchResults.put(msg, (ChannelQueues) this.clone());
-				env.getVM().ignoreState(); // Stop the search here
+				ChannelQueues queues = new ChannelQueues();
+				queues.putAll(this);
+				searchResults.put(msg, queues);
+				// Tell the listener to save the state and stop the search
+				NetworkLayerListener.saveState(stateId, true);
 			}
 		}
+	}
+
+	/**
+	 * Advance the depth marker for the queue front
+	 * @param depth The current depth
+	 */
+	public void advance(int depth) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	/**
+	 * Remove queue elements up to a specified depth for backtracking
+	 * @param depth The depth to which it should be backtracked
+	 */
+	public void backtrack(int depth) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void updateState(int stateId, RestorableVMState restorableState) {
+		stateRepository.put(stateId, restorableState);		
+	}
+
+	public RestorableVMState getState(int startState) {
+		return stateRepository.get(startState);
+	}
+	
+	public int addState(RestorableVMState s) {
+		int id = stateRepository.size();
+		stateRepository.put(id, s);
+		return id;
 	}
 }

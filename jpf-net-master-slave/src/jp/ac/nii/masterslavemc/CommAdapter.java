@@ -18,12 +18,10 @@ import java.util.Map;
 public class CommAdapter {
 	private transient JPFLogger log = JPF.getLogger("jp.ac.nii.masterslavemc.CommAdapter");
 	private MasterSlaveCommunication comm;
-	private Map<Integer, RestorableVMState> stateMap;
 	private static final CommAdapter instance = new CommAdapter();
 	
 	private CommAdapter(MasterSlaveCommunication comm) {
 		this.comm = comm;
-		stateMap = new HashMap<Integer, RestorableVMState>();
 	}
 	
 	private CommAdapter() {
@@ -84,10 +82,6 @@ public class CommAdapter {
 	 */
 	public SearchResultBundle getSearchResults() {
 		return comm.getSearchResults();
-	}
-
-	public Map<Integer, RestorableVMState> getStateMap() {
-		return stateMap ;
 	}
 	
 }
