@@ -6,13 +6,11 @@ import gov.nasa.jpf.jvm.RestorableVMState;
 import gov.nasa.jpf.util.JPFLogger;
 
 import java.rmi.RemoteException;
-import java.util.ArrayList;
+import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
-import java.util.Queue;
 import java.util.Set;
-import java.util.Vector;
 
 import jp.ac.nii.masterslavemc.Channel.ChannelType;
 
@@ -49,6 +47,7 @@ public class NetworkLayer extends ChannelQueues {
 		this.put(c, new LinkedList<NetworkMessage>());
 	}
 
+	Map<NetworkMessage, ChannelQueues> alternatives = new HashMap<NetworkMessage, ChannelQueues>();
 	/**
 	 * Accepts a socket connection if there is a connection request on the
 	 * slave, for that, the current queue status is queried, or we trigger a
@@ -67,6 +66,8 @@ public class NetworkLayer extends ChannelQueues {
 			SearchResultBundle results = CommAdapter.getInstance()
 					.getSearchResults();
 			if (results.getSearchResults()!=null && !results.getSearchResults().isEmpty()) {
+				// Save the alternatives??
+				this.alternatives.putAll(results.getSearchResults());
 				return results.getSearchResults().keySet();
 			}
 			return null;
@@ -126,17 +127,19 @@ public class NetworkLayer extends ChannelQueues {
 
 	public void connect(MJIEnv env, int id, int port) {
 		// Get the queue for the current socket
-		Queue<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,id));
+		Deque<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,id));
 		// We may Remember this state, make room for it in the repository
 		int stateId = stateRepository.size();
 		stateRepository.put(stateId, null);
 		// Create new CONNECT network message and put in on the corresponding queue
 		NetworkMessage msg = new NetworkMessage(0, true, Channel.get(ChannelType.CLIENT,id), stateId);
+		msg.setDepth(env.getJPF().getSearch().getDepth());
 		Q.add(msg);
 		
 		if (slave){			
 			// If this is what we were searching for
 			if (searchParams.getSearchChannel().getType() == ChannelType.SERVER && port == searchParams.getSearchChannel().getId()){
+				// Copy the current queue status
 				ChannelQueues queues = new ChannelQueues();
 				queues.putAll(this);
 				searchResults.put(msg, queues);
@@ -147,7 +150,7 @@ public class NetworkLayer extends ChannelQueues {
 	}
 
 	/**
-	 * Advance the depth marker for the queue front
+	 * Callback method for state advance. (unused)
 	 * @param depth The current depth
 	 */
 	public void advance(int depth) {
@@ -160,8 +163,12 @@ public class NetworkLayer extends ChannelQueues {
 	 * @param depth The depth to which it should be backtracked
 	 */
 	public void backtrack(int depth) {
-		// TODO Auto-generated method stub
-		
+		// Remove from the queues all messages below the indicated depth
+		for (java.util.Map.Entry<Channel, Deque<NetworkMessage>> e : this.entrySet()){
+			Deque<NetworkMessage> Q = e.getValue();
+			while (Q.peekLast()!=null && Q.peekLast().getDepth() >= depth)
+				Q.removeLast();
+		}
 	}
 
 	public void updateState(int stateId, RestorableVMState restorableState) {
@@ -176,5 +183,15 @@ public class NetworkLayer extends ChannelQueues {
 		int id = stateRepository.size();
 		stateRepository.put(id, s);
 		return id;
+	}
+
+	public Set<NetworkMessage> read(MJIEnv env, int sockID) {
+		// Get the queue for the specified socket
+		Deque<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,sockID));
+		if (Q.isEmpty()){ //Need to search the slave
+			return null;
+		} else {
+			return null;
+		}
 	}
 }

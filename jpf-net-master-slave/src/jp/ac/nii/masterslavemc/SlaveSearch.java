@@ -79,7 +79,7 @@ public class SlaveSearch extends SharedSearch {
 		// Check whether we have seen this search before
 		if (searchCache.contains(params))
 			return new SearchResultBundle(null);
-		
+		searchCache.add(params);
 		int startState = params.getStartState();
 		boolean depthLimitReached = false;
 		

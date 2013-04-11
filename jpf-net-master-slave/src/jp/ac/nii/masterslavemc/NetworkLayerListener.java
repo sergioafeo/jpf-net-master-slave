@@ -20,6 +20,7 @@ public class NetworkLayerListener extends ListenerAdapter {
 		net.advance(search.getDepth());
 		if (saveNextState){
 			saveNextState = false;
+			stopSearch = false;
 			net.updateState(stateId,search.getVM().getRestorableState());
 			if (stopSearch) search.getVM().ignoreState();
 		}

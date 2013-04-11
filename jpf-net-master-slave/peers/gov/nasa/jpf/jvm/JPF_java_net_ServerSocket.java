@@ -25,7 +25,9 @@ public class JPF_java_net_ServerSocket {
 			 env.setIntArrayElement(newArray, i++, m.getOrigin().getId());
 		 }
 		 return newArray;
-		} else throw new IOException("No connections found in slave.");
+		} else {
+			return env.newIntArray(0);
+		}
 	}
 
 	public static boolean native_init(MJIEnv env, int objRef, int port) {
