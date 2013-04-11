@@ -20,7 +20,6 @@
 package gov.nasa.jpf.jvm;
 
 import java.io.IOException;
-import java.net.InetAddress;
 
 import jp.ac.nii.masterslavemc.NetworkLayer;
 import jp.ac.nii.masterslavemc.Channel.ChannelType;
@@ -65,21 +64,13 @@ public class JPF_java_net_Socket {
 	}
 
 	public static int getPort(MJIEnv env, int objRef) {
-//		PhysicalConnection c;
-		int sock_id = env.getIntField(objRef, "socketID");
-
-//		c = CacheLayer.conn_list.get(sock_id);
-//		return c.getPort();
+//		int sock_id = env.getIntField(objRef, "socketID");
 		return 0;
 	}
 
 	public static int getLocalPort(MJIEnv env, int objRef) {
-//		PhysicalConnection c;
-		int sock_id = env.getIntField(objRef, "socketID");
+		// stub
 		return 0;
-
-//		c = CacheLayer.conn_list.get(sock_id);
-//		return c.getLocalPort();
 	}
 
 	public static boolean isConnected(MJIEnv env, int objRef) {
@@ -100,8 +91,6 @@ public class JPF_java_net_Socket {
 	}
 
 	public static void close(MJIEnv env, int objRef) throws IOException {
-		int sock_id = env.getIntField(objRef, "socketID");
-
-//		CacheLayer.getInstance().close(sock_id);
+		// Ignore closing for now
 	}
 }

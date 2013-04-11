@@ -33,6 +33,7 @@ public class Socket {
 	public Socket(int id) {
 		socketID = id;
 		numSocket = id+1;
+		native_Socket();
 	}
 	
 	public Socket() {
@@ -123,7 +124,7 @@ public class Socket {
 	}
 
 	public boolean isChannelReadable() throws IOException {
-//		return in.isChannelReadable();
+		// stub
 		return false;
 	}
 }

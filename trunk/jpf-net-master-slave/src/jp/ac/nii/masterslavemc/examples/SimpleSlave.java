@@ -11,7 +11,7 @@ public class SimpleSlave {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int msgs[] = {0, 1, 2, -1};
+		int msgs[] = {0, 1, 2, 250};
 		try {
 			Socket s = new Socket("localhost", 5123);
 			InputStream input = s.getInputStream();

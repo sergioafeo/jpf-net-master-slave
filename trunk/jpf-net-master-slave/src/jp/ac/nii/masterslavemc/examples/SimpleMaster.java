@@ -49,11 +49,9 @@ public class SimpleMaster {
 		try {
 			ServerSocket s = new ServerSocket(5123);
 			Socket client = null;
-
-			while (true) {
-				client = s.accept();
-				new Thread(new WorkerThread(client)).start();
-			}
+			client = s.accept();
+			new Thread(new WorkerThread(client)).start();
+				
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
