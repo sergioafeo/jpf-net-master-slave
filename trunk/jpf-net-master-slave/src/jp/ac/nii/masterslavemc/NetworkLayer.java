@@ -8,6 +8,7 @@ import gov.nasa.jpf.util.JPFLogger;
 import java.rmi.RemoteException;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.Map;
 import java.util.Set;
@@ -47,7 +48,10 @@ public class NetworkLayer extends ChannelQueues {
 		this.put(c, new LinkedList<NetworkMessage>());
 	}
 
-	Map<NetworkMessage, ChannelQueues> alternatives = new HashMap<NetworkMessage, ChannelQueues>();
+	int stateID;
+	Map<Integer, Map<NetworkMessage, ChannelQueues>> alternatives = new HashMap<Integer, Map<NetworkMessage, ChannelQueues>>();
+	private Map<NetworkMessage, ChannelQueues> currentAlternatives;
+	private int currentDepth;
 	/**
 	 * Accepts a socket connection if there is a connection request on the
 	 * slave, for that, the current queue status is queried, or we trigger a
@@ -58,22 +62,63 @@ public class NetworkLayer extends ChannelQueues {
 	 * @return the socketID of the remote socket that initiated a connection
 	 */
 	public Set<NetworkMessage> accept(int port) {
-		SearchParamBundle params = new SearchParamBundle(slaveState, 
-				this.getChannel(port, ChannelType.SERVER), true,
-				(ChannelQueues) this, SearchCommand.SEARCH);
-		try {
-			CommAdapter.getInstance().searchSlave(params);
-			SearchResultBundle results = CommAdapter.getInstance()
-					.getSearchResults();
-			if (results.getSearchResults()!=null && !results.getSearchResults().isEmpty()) {
-				// Save the alternatives??
-				this.alternatives.putAll(results.getSearchResults());
-				return results.getSearchResults().keySet();
+		Deque<NetworkMessage> Q = this.get(this.getChannel(port,
+				ChannelType.SERVER));
+		assert (Q!=null) : "Accept message for an uninitialized server socket.";
+		if (!slave && Q.isEmpty() ) { // Queue is empty, ask the slave
+			SearchParamBundle params = new SearchParamBundle(slaveState,
+					this.getChannel(port, ChannelType.SERVER), true,
+					(ChannelQueues) this, SearchCommand.SEARCH);
+			try {
+				CommAdapter.getInstance().searchSlave(params);
+				SearchResultBundle results = CommAdapter.getInstance()
+						.getSearchResults();
+				if (results.getSearchResults() != null
+						&& !results.getSearchResults().isEmpty()) {
+					// Get the first message
+					java.util.Map.Entry<NetworkMessage, ChannelQueues> firstmsg = results.getSearchResults().entrySet().iterator().next();
+					// Add it to the queue
+					Q.add(firstmsg.getKey());
+					this.merge(firstmsg.getValue());
+					// Remove from the set and save the rest
+					results.getSearchResults().remove(firstmsg.getKey());
+					// Save if there is something left
+					if (results.getSearchResults().size() > 0) {
+						branchingstate = true;
+						this.currentAlternatives = new HashMap<NetworkMessage, ChannelQueues>(
+								results.getSearchResults());
+					}
+					return results.getSearchResults().keySet(); 
+				}
+				return null;
+			} catch (RemoteException e) {
+				e.printStackTrace();
+				return null;
 			}
-			return null;
-		} catch (RemoteException e) {
-			e.printStackTrace();
-			return null;
+		}
+		// At this point we may check again if there is a connect message in the queue
+		// We'll come here directly if we are in the slave or we already have data in the queue
+		if (!Q.isEmpty()){ // There is a connection, return it
+			Set<NetworkMessage> res = new HashSet<NetworkMessage>();
+			res.add(Q.removeLast());
+			return res;
+		}
+		return null;
+	}
+
+	private void merge(ChannelQueues queues) {
+		for (java.util.Map.Entry<Channel,Deque<NetworkMessage>> q : queues.entrySet()){
+			Deque<NetworkMessage> localqueue = this.get(q.getKey());
+			Deque<NetworkMessage> remotequeue = q.getValue();
+			
+			if (remotequeue.isEmpty()) continue;
+			
+			boolean found = false;
+			NetworkMessage localTail = localqueue.peekLast();
+			NetworkMessage remoteMsg = remotequeue.removeFirst();
+			while (!localTail.equals(remoteMsg)){
+				remoteMsg = remotequeue.removeFirst(); 
+			}
 		}
 	}
 
@@ -95,9 +140,12 @@ public class NetworkLayer extends ChannelQueues {
 
 	Map<NetworkMessage, ChannelQueues> searchResults = new HashMap<NetworkMessage, ChannelQueues>();
 	private Map<Integer,RestorableVMState> stateRepository = new HashMap<Integer, RestorableVMState>();
+	private boolean branchingstate;
 	
 	public Map<NetworkMessage, ChannelQueues> getSearchResults(){
-		return searchResults;
+		Map<NetworkMessage, ChannelQueues> retval = searchResults;
+		searchResults = new HashMap<NetworkMessage, ChannelQueues>();
+		return retval;
 	}
 
 	public SearchParamBundle getSearchParams() {
@@ -134,19 +182,17 @@ public class NetworkLayer extends ChannelQueues {
 		// Create new CONNECT network message and put in on the corresponding queue
 		NetworkMessage msg = new NetworkMessage(0, true, Channel.get(ChannelType.CLIENT,id), stateId);
 		msg.setDepth(env.getJPF().getSearch().getDepth());
-		Q.add(msg);
 		
-		if (slave){			
-			// If this is what we were searching for
-			if (searchParams.getSearchChannel().getType() == ChannelType.SERVER && port == searchParams.getSearchChannel().getId()){
+		// Check whether this connect is search relevant
+		if (slave && searchParams.getSearchChannel().getType() == ChannelType.SERVER && port == searchParams.getSearchChannel().getId()){						
 				// Copy the current queue status
 				ChannelQueues queues = new ChannelQueues();
 				queues.putAll(this);
 				searchResults.put(msg, queues);
 				// Tell the listener to save the state and stop the search
 				NetworkLayerListener.saveState(stateId, true);
-			}
-		}
+		} else // Just add it to the search and continue
+			Q.add(msg);
 	}
 
 	/**
@@ -154,8 +200,11 @@ public class NetworkLayer extends ChannelQueues {
 	 * @param depth The current depth
 	 */
 	public void advance(int depth) {
-		// TODO Auto-generated method stub
-		
+		currentDepth = depth;
+		if (branchingstate){
+			alternatives.put(depth, currentAlternatives);
+			branchingstate = false;
+		}
 	}
 
 	/**
@@ -168,6 +217,9 @@ public class NetworkLayer extends ChannelQueues {
 			Deque<NetworkMessage> Q = e.getValue();
 			while (Q.peekLast()!=null && Q.peekLast().getDepth() >= depth)
 				Q.removeLast();
+		}
+		if (!alternatives.get(depth).isEmpty()){
+			
 		}
 	}
 

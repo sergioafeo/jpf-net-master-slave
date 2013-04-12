@@ -46,11 +46,14 @@ public class ServerSocket implements java.io.Closeable {
 
 	public Socket accept() throws IOException {
 		int[] sockets = native_accept();
-		if (sockets.length > 0) {
+		if (sockets.length < 1) {Verify.ignoreIf(true); return null;}
+		if (sockets.length == 1) // Prevent unnecessary backtracking
+			return new Socket(sockets[0]);
+		if (sockets.length > 1) {
 			int index = Verify.getInt(0, sockets.length - 1);
 			return new Socket(sockets[index]);
 		}
-		else {Verify.ignoreIf(true); return null;}
+		return null;
 	}
 
 	@Override
