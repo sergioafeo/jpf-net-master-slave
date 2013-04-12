@@ -22,13 +22,13 @@ class WorkerThread implements Runnable {
 		} catch (IOException e1) {
 			return;
 		}
-
-		while (true)
+		int msg = 0;
+		while (msg != -1)
 			try {
-				int msg = input.read();
-				if (msg == -1) {
+				msg = input.read();
+				if (msg == 250) {
 					assert (false);
-				} else
+				} else if (msg != -1)
 					output.write(msg);
 			} catch (IOException e) {
 				break;

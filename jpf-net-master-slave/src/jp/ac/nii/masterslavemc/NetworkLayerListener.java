@@ -1,6 +1,7 @@
 package jp.ac.nii.masterslavemc;
 
 import gov.nasa.jpf.ListenerAdapter;
+import gov.nasa.jpf.jvm.JVM;
 import gov.nasa.jpf.search.Search;
 
 /**
@@ -18,16 +19,16 @@ public class NetworkLayerListener extends ListenerAdapter {
 	@Override
 	public void stateAdvanced(Search search) {
 		net.advance(search.getDepth());
-		if (saveNextState){
-			saveNextState = false;
-			stopSearch = false;
+		if (saveNextState){			
 			net.updateState(stateId,search.getVM().getRestorableState());
 			if (stopSearch) search.getVM().ignoreState();
+			stopSearch = false;
+			saveNextState = false;
 		}
 	}
 
 	@Override
-	public void stateBacktracked(Search search) {
+	public void stateBacktracked(Search search) {	
 		net.backtrack(search.getDepth());
 	}
 

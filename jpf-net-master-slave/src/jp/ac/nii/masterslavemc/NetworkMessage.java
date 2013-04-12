@@ -74,4 +74,18 @@ public class NetworkMessage implements Serializable{
 			return "["+origin+":CONNECT]@"+state;
 		return "["+origin+":"+contents+"]@"+state;
 	}
+	
+	@Override
+	public boolean equals(Object obj){
+		if (obj instanceof NetworkMessage) {
+			NetworkMessage m = (NetworkMessage) obj;
+			if (	m.connect == this.connect &&
+					m.contents == this.contents &&
+					m.depth == this.depth &&
+					m.origin.equals(this.origin) &&
+					m.state == this.state)
+				return true;
+		}
+		return false;
+	}
 }
