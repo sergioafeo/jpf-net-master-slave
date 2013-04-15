@@ -7,7 +7,7 @@ import gov.nasa.jpf.search.Search;
 /**
  * Simple listener to maintain the network layer queues synchronized with the search.
  * 
- * @author Sergio
+ * @author Sergio A. Feo
  *
  */
 public class NetworkLayerListener extends ListenerAdapter {
