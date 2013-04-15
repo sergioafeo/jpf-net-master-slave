@@ -17,7 +17,7 @@ public class JPF_java_net_ServerSocket {
 
 	public static int native_accept_____3I(MJIEnv env, int objRef) throws IOException {
 		int port = env.getIntField(objRef, "port");
-		Set<NetworkMessage> newSockets = net.accept(port);
+		Set<NetworkMessage> newSockets = net.accept(env,port);
 		if (newSockets != null && !newSockets.isEmpty()){
 		 int newArray = env.newIntArray(newSockets.size());
 		 int i = 0;
