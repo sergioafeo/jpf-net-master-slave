@@ -91,7 +91,7 @@ public class SlaveSearch extends SharedSearch {
 		depth = 0;
 		if (s != null){
 			vm.restoreState(s);
-			vm.ignoreState(false);
+			vm.forceState();
 		}
 		else
 			throw new JPFException("Master specified an inexistent state:" + startState);
