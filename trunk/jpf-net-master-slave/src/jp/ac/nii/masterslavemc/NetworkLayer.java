@@ -249,9 +249,10 @@ public class NetworkLayer extends ChannelQueues {
 	}
 
 	public Set<NetworkMessage> read(MJIEnv env, int sockID) {
+		log.info("Read:"+sockID);
 		// Get the queue for the specified socket
 		Deque<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,sockID));
-		if (Q.isEmpty()){ //Need to search the slave
+		if (!slave && Q.isEmpty()){ //Need to search the slave
 			SearchParamBundle params = new SearchParamBundle(slaveState,
 					this.getChannel(sockID, ChannelType.CLIENT), false,
 					(ChannelQueues) this, SearchCommand.SEARCH);
@@ -293,10 +294,12 @@ public class NetworkLayer extends ChannelQueues {
 			res.add(Q.remove());
 			return res;
 		}
+		log.info("Empty read.");
 		return null;
 	}
 
 	public void write(MJIEnv env, int sockID, int b) {
+		log.info("WRITE");
 		Deque<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,
 				sockID));
 		assert (Q != null) : "Attempt to write to an uninitialized socket.";
