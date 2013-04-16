@@ -87,9 +87,12 @@ public class SlaveSearch extends SharedSearch {
 		net.setSearchParams(params);
 		// Backtrack to the starting state
 		RestorableVMState s = net.getState(startState);
+		
 		depth = 0;
-		if (s != null)
+		if (s != null){
 			vm.restoreState(s);
+			vm.ignoreState(false);
+		}
 		else
 			throw new JPFException("Master specified an inexistent state:" + startState);
 		done  = false;

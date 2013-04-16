@@ -82,8 +82,9 @@ public class NetworkLayer extends ChannelQueues {
 							.getSearchResults().entrySet().iterator().next();
 					// Replace our current state with the incoming state
  					this.merge(firstmsg.getValue());
-					Set<NetworkMessage> retval = new HashSet<NetworkMessage>(
-							results.getSearchResults().keySet());
+ 					slaveState = firstmsg.getKey().getState();
+					//Set<NetworkMessage> retval = new HashSet<NetworkMessage>(
+					//		results.getSearchResults().keySet());
 					// Remove from the set and save the rest
 					results.getSearchResults().remove(firstmsg.getKey());
 					// Save if there is something left
@@ -93,9 +94,9 @@ public class NetworkLayer extends ChannelQueues {
 						this.currentAlternatives = new HashMap<NetworkMessage, ChannelQueues>(
 								results.getSearchResults());
 					}
-					return retval;
+					//return retval;
 				}
-				return null;
+				//return null;
 			} catch (RemoteException e) {
 				e.printStackTrace();
 				return null;
@@ -107,7 +108,9 @@ public class NetworkLayer extends ChannelQueues {
 				ChannelType.SERVER));
 		if (!Q.isEmpty()){ // There is a connection, return it
 			Set<NetworkMessage> res = new HashSet<NetworkMessage>();
-			res.add(Q.removeLast());
+			NetworkMessage msg = Q.removeLast();
+			res.add(msg);
+			slaveState = msg.getState();
 			return res;
 		}
 		return null;
@@ -172,7 +175,7 @@ public class NetworkLayer extends ChannelQueues {
 
 	public void connect(MJIEnv env, int id, int port) {
 		// Get the queue for the current socket
-		Deque<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,id));
+		Deque<NetworkMessage> Q = this.get(Channel.get(ChannelType.SERVER,port));
 		// We may Remember this state, make room for it in the repository
 		int stateId = stateRepository.size();
 		stateRepository.put(stateId, env.getVM().getRestorableState());
@@ -184,7 +187,8 @@ public class NetworkLayer extends ChannelQueues {
 		if (slave && searchParams.getSearchChannel().getType() == ChannelType.SERVER && port == searchParams.getSearchChannel().getId()){						
 				// Copy the current queue status
 				ChannelQueues queues = new ChannelQueues();
-				queues.putAll(this);
+				// DEEP CLONE NECESSARY
+				queues.deepCopy(this);
 				searchResults.put(msg, queues);
 				// Tell the listener to stop the search
 				env.getVM().ignoreState();
@@ -215,6 +219,7 @@ public class NetworkLayer extends ChannelQueues {
 		if (alt != null && !alt.isEmpty()){
 			java.util.Map.Entry<NetworkMessage, ChannelQueues> newstate = alt.entrySet().iterator().next();
 			this.merge(newstate.getValue());
+			slaveState = newstate.getKey().getState();
 			alt.remove(newstate.getKey());
 			return;
 		}
@@ -248,7 +253,7 @@ public class NetworkLayer extends ChannelQueues {
 		Deque<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,sockID));
 		if (Q.isEmpty()){ //Need to search the slave
 			SearchParamBundle params = new SearchParamBundle(slaveState,
-					this.getChannel(sockID, ChannelType.CLIENT), true,
+					this.getChannel(sockID, ChannelType.CLIENT), false,
 					(ChannelQueues) this, SearchCommand.SEARCH);
 			try {
 				CommAdapter.getInstance().searchSlave(params);
@@ -261,8 +266,8 @@ public class NetworkLayer extends ChannelQueues {
 							.getSearchResults().entrySet().iterator().next();
 					// Replace our current state with the incoming state
  					this.merge(firstmsg.getValue());
-					Set<NetworkMessage> retval = new HashSet<NetworkMessage>(
-							results.getSearchResults().keySet());
+					//Set<NetworkMessage> retval = new HashSet<NetworkMessage>(
+					//		results.getSearchResults().keySet());
 					// Remove from the set and save the rest
 					results.getSearchResults().remove(firstmsg.getKey());
 					// Save if there is something left
@@ -272,18 +277,23 @@ public class NetworkLayer extends ChannelQueues {
 						this.currentAlternatives = new HashMap<NetworkMessage, ChannelQueues>(
 								results.getSearchResults());
 					}
-					return retval;
+					//return retval;
 				}
-				return null;
+				//return null;
 			} catch (RemoteException e) {
 				e.printStackTrace();
 				return null;
 			}
-		} else { // Just retrieve the queue message
+		} 
+		
+		 // Just retrieve the queue message
+		Q = this.get(Channel.get(ChannelType.CLIENT,sockID));
+		if (!Q.isEmpty()){
 			Set<NetworkMessage> res = new HashSet<NetworkMessage>();
 			res.add(Q.remove());
 			return res;
 		}
+		return null;
 	}
 
 	public void write(MJIEnv env, int sockID, int b) {
@@ -293,7 +303,7 @@ public class NetworkLayer extends ChannelQueues {
 
 		// We may Remember this state, make room for it in the repository
 		int stateId = stateRepository.size();
-		stateRepository.put(stateId, null);
+		stateRepository.put(stateId, env.getVM().getRestorableState());
 		Channel sock = Channel.get(ChannelType.CLIENT, sockID);
 		// Create the message
 		NetworkMessage msg = new NetworkMessage(b, false, sock, stateID);
@@ -304,10 +314,11 @@ public class NetworkLayer extends ChannelQueues {
 				&& sock.getId() == searchParams.getSearchChannel().getId()) {
 			// Copy the current queue status
 			ChannelQueues queues = new ChannelQueues();
-			queues.putAll(this);
+			queues.deepCopy(this);
 			searchResults.put(msg, queues);
 			// Tell the listener to save the state and stop the search
-			NetworkLayerListener.saveState(stateId, true);
+			env.getVM().ignoreState();
+			// NetworkLayerListener.saveState(stateId, true);
 		}
 	}
 }
