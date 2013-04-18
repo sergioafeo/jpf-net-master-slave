@@ -17,7 +17,7 @@
 // DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.jvm;
+package gov.nasa.jpf.vm;
 
 import java.io.IOException;
 //import gov.nasa.jpf.network.cache.*;

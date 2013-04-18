@@ -1,10 +1,6 @@
 package jp.ac.nii.masterslavemc;
 
 import java.io.Serializable;
-import java.util.Queue;
-
-import gov.nasa.jpf.State;
-import gov.nasa.jpf.jvm.RestorableVMState;
 
 public class SearchParamBundle implements Serializable{
 	/**

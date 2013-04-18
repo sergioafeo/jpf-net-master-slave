@@ -1,6 +1,6 @@
 package java.net;
 
-import gov.nasa.jpf.jvm.Verify;
+import gov.nasa.jpf.vm.Verify;
 
 import java.io.IOException;
 import java.net.InetAddress;

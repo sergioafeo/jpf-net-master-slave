@@ -1,12 +1,9 @@
 package jp.ac.nii.masterslavemc;
 
 import gov.nasa.jpf.JPF;
-import gov.nasa.jpf.jvm.RestorableVMState;
 import gov.nasa.jpf.util.JPFLogger;
 
 import java.rmi.RemoteException;
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Provides the user API for communicating between master and slave model checkers.

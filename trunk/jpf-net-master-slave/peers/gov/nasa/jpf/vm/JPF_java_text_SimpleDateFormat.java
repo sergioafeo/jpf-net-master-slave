@@ -17,7 +17,7 @@
 // DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.jvm;
+package gov.nasa.jpf.vm;
 
 import java.text.DateFormat;
 import java.text.Format;

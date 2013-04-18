@@ -1,6 +1,6 @@
 package java.io;
 
-import gov.nasa.jpf.jvm.Verify;
+import gov.nasa.jpf.vm.Verify;
 
 public class NetworkLayerInputStream extends InputStream {
 
