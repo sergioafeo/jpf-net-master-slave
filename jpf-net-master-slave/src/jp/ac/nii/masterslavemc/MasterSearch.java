@@ -3,7 +3,7 @@ package jp.ac.nii.masterslavemc;
 import java.rmi.RemoteException;
 
 import gov.nasa.jpf.Config;
-import gov.nasa.jpf.jvm.JVM;
+import gov.nasa.jpf.vm.VM;
 
 /**
  * @author Sergio A. Feo
@@ -15,7 +15,7 @@ import gov.nasa.jpf.jvm.JVM;
 public class MasterSearch extends SharedSearch {
 	
 	
-	public MasterSearch(Config config, JVM vm) {
+	public MasterSearch(Config config, VM vm) {
 		super(config, vm);
 	}
 

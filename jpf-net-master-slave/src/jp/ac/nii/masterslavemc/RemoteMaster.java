@@ -17,7 +17,7 @@ public class RemoteMaster {
 		// Set the configuration parameters for master and slave
 		configMaster.setProperty("search.class",
 				"jp.ac.nii.masterslavemc.MasterSearch");
-		configMaster.setProperty(Config.TARGET_KEY,
+		configMaster.setProperty("target",
 				"jp.ac.nii.masterslavemc.examples.SimpleMaster");
 
 		// Obtain JPF instance

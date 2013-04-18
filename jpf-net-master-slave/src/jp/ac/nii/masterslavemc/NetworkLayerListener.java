@@ -1,7 +1,6 @@
 package jp.ac.nii.masterslavemc;
 
 import gov.nasa.jpf.ListenerAdapter;
-import gov.nasa.jpf.jvm.JVM;
 import gov.nasa.jpf.search.Search;
 
 /**

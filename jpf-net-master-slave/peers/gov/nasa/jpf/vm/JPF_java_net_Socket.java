@@ -17,14 +17,14 @@
 // DOCUMENTATION, IF PROVIDED, WILL CONFORM TO THE SUBJECT SOFTWARE.
 //
 
-package gov.nasa.jpf.jvm;
+package gov.nasa.jpf.vm;
 
 import java.io.IOException;
 
 import jp.ac.nii.masterslavemc.NetworkLayer;
 import jp.ac.nii.masterslavemc.Channel.ChannelType;
 
-import gov.nasa.jpf.jvm.MJIEnv;
+import gov.nasa.jpf.vm.MJIEnv;
 
 public class JPF_java_net_Socket {
 

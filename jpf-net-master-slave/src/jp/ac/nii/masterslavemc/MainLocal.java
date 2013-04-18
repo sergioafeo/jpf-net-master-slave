@@ -19,11 +19,11 @@ public class MainLocal {
 		// Set the configuration parameters for master and slave
 		configMaster.setProperty("search.class",
 				"jp.ac.nii.masterslavemc.MasterSearch");
-		configMaster.setProperty(Config.TARGET_KEY,
+		configMaster.setProperty("target",
 				"jp.ac.nii.masterslavemc.examples.SimpleMaster");
 		configSlave.setProperty("search.class",
 				"jp.ac.nii.masterslavemc.SlaveSearch");
-		configSlave.setProperty(Config.TARGET_KEY,
+		configSlave.setProperty("target",
 				"jp.ac.nii.masterslavemc.examples.SimpleSlave");
 		// Obtain JPF instances
 		master = new JPF(configMaster);

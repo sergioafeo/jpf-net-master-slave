@@ -1,21 +1,19 @@
 package jp.ac.nii.masterslavemc;
 
+import gov.nasa.jpf.Config;
+import gov.nasa.jpf.JPFException;
+import gov.nasa.jpf.vm.RestorableVMState;
+import gov.nasa.jpf.vm.VM;
+
 import java.rmi.RemoteException;
 import java.util.HashSet;
-import java.util.Map;
 import java.util.Set;
-
-import gov.nasa.jpf.Config;
-import gov.nasa.jpf.JPF;
-import gov.nasa.jpf.JPFException;
-import gov.nasa.jpf.jvm.JVM;
-import gov.nasa.jpf.jvm.RestorableVMState;
 
 public class SlaveSearch extends SharedSearch {
 
 	private Set<SearchParamBundle> searchCache = new HashSet<SearchParamBundle>();
 	
-	public SlaveSearch(Config config, JVM vm) {
+	public SlaveSearch(Config config, VM vm) {
 		super(config, vm);
 	}
 
@@ -91,22 +89,31 @@ public class SlaveSearch extends SharedSearch {
 		depth = 0;
 		if (s != null){
 			vm.restoreState(s);
+			vm.resetNextCG();
 			vm.forceState();
 		}
 		else
 			throw new JPFException("Master specified an inexistent state:" + startState);
+		boolean restartedSearch = startState != 0;
 		done  = false;
 		// Search
 		while (!done) {
-		      if (checkAndResetBacktrackRequest() || !isNewState() || isEndState() || isIgnoredState() || depthLimitReached ) {
-		        if (!backtrack()) { // backtrack not possible, done
-		          break;
-		        }
-
-		        depthLimitReached = false;
-		        depth--;
-		        notifyStateBacktracked();
-		      }
+		    //if (!restartedSearch)  
+				if ( checkAndResetBacktrackRequest() 
+			    		  || !isNewState() 
+			    		  || isEndState() 
+			    		  || isIgnoredState() 
+			    		  || depthLimitReached ) {
+			    	restartedSearch = false;
+			        
+			    	if (!backtrack()) { // backtrack not possible, done
+			          break;
+			        }
+	
+			        depthLimitReached = false;
+			        depth--;
+			        notifyStateBacktracked();
+			      }
 
 		      if (forward()) {
 		        depth++;
