@@ -24,16 +24,18 @@ import java.io.IOException;
 import jp.ac.nii.masterslavemc.NetworkLayer;
 import jp.ac.nii.masterslavemc.Channel.ChannelType;
 
+import gov.nasa.jpf.annotation.MJI;
 import gov.nasa.jpf.vm.MJIEnv;
 
-public class JPF_java_net_Socket {
-
+public class JPF_java_net_Socket extends NativePeer {
+	@MJI
 	public static void native_Socket____(MJIEnv env, int objRef) {
 		int id;
 		id = env.getIntField(objRef, "socketID");
 		NetworkLayer.getInstance().newChannel(ChannelType.CLIENT, id);
 	}
-
+	
+	@MJI
 	public static void native_connect__Ljava_net_InetAddress_2I(MJIEnv env, int objRef, int addrRef, int port)
 			throws IOException {
 
@@ -48,6 +50,7 @@ public class JPF_java_net_Socket {
 //		return CacheLayer.getInstance().isMainAlive();
 	}
 
+	@MJI
 	public static int native_getInetAddress(MJIEnv env, int objRef) {
 //		PhysicalConnection c;
 		byte[] addr;
@@ -90,6 +93,7 @@ public class JPF_java_net_Socket {
 //		return cl.isSocketClosed(sock_id);
 	}
 
+	@MJI
 	public static void close(MJIEnv env, int objRef) throws IOException {
 		// Ignore closing for now
 	}

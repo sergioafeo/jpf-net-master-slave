@@ -1,6 +1,7 @@
 package gov.nasa.jpf.vm;
 
 import gov.nasa.jpf.JPF;
+import gov.nasa.jpf.annotation.MJI;
 
 import java.io.IOException;
 import java.util.Set;
@@ -11,10 +12,11 @@ import jp.ac.nii.masterslavemc.NetworkLayer;
 import jp.ac.nii.masterslavemc.Channel.ChannelType;
 import jp.ac.nii.masterslavemc.NetworkMessage;
 
-public class JPF_java_net_ServerSocket {
+public class JPF_java_net_ServerSocket extends NativePeer {
 	public static final NetworkLayer net = NetworkLayer.getInstance();
 	private static Logger log = JPF.getLogger("gov.nasa.jpf.jvm");
 
+	@MJI
 	public static int native_accept_____3I(MJIEnv env, int objRef) throws IOException {
 		int port = env.getIntField(objRef, "port");
 		Set<NetworkMessage> newSockets = net.accept(env,port);
@@ -30,6 +32,7 @@ public class JPF_java_net_ServerSocket {
 		}
 	}
 
+	@MJI
 	public static boolean native_init(MJIEnv env, int objRef, int port) {
 		Channel newC =  Channel.get(ChannelType.SERVER, port);
 		if (!net.containsKey(newC))
