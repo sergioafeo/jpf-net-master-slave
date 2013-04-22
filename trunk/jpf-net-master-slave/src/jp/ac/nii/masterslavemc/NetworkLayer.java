@@ -176,8 +176,8 @@ public class NetworkLayer extends ChannelQueues {
 				queues.deepCopy(this);
 				searchResults.put(msg, queues);
 				// Tell the listener to stop the search
-				env.getVM().setNextChoiceGenerator(new BreakGenerator("write",env.getVM().getCurrentThread(),true));
-				//NetworkLayerListener.saveState(stateId, true);
+				env.getVM().breakTransition();
+				NetworkLayerListener.saveState(stateId, true);
 		}
 	}
 	private synchronized Channel getChannel(int id, ChannelType type) {
@@ -322,8 +322,8 @@ public class NetworkLayer extends ChannelQueues {
 			queues.deepCopy(this);
 			searchResults.put(msg, queues);
 			// Tell the listener to save the state and stop the search
-			env.getVM().setNextChoiceGenerator(new BreakGenerator("write",env.getVM().getCurrentThread(),true));
-			//NetworkLayerListener.saveState(stateId, true);
+			env.getVM().breakTransition();
+			NetworkLayerListener.saveState(stateId, true);
 		}
 	}
 }
