@@ -16,7 +16,7 @@ public class SimpleSlave {
 			Socket s = new Socket("localhost", 5123);
 			InputStream input = s.getInputStream();
 			OutputStream output = s.getOutputStream();
-			output.write(100);
+			//output.write(100);
 			for (int msg : msgs){
 				output.write(msg);
 				int reply = input.read();

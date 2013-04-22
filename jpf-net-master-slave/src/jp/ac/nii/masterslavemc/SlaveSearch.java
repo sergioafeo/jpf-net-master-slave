@@ -2,6 +2,7 @@ package jp.ac.nii.masterslavemc;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPFException;
+import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.RestorableVMState;
 import gov.nasa.jpf.vm.VM;
 
@@ -89,6 +90,8 @@ public class SlaveSearch extends SharedSearch {
 		depth = 0;
 		if (s != null){
 			vm.restoreState(s);
+//			ChoiceGenerator<?> cg = vm.getChoiceGenerator();
+//			if (cg!=null) cg.reset();
 			vm.resetNextCG();
 			vm.forceState();
 		}
@@ -100,7 +103,7 @@ public class SlaveSearch extends SharedSearch {
 		while (!done) {
 		    //if (!restartedSearch)  
 				if ( checkAndResetBacktrackRequest() 
-			    		  || !isNewState() 
+			    		  || (!isNewState() && !restartedSearch) 
 			    		  || isEndState() 
 			    		  || isIgnoredState() 
 			    		  || depthLimitReached ) {
