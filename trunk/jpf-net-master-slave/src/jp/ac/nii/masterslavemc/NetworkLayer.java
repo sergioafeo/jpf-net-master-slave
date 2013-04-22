@@ -4,6 +4,7 @@ import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.util.JPFLogger;
 import gov.nasa.jpf.vm.MJIEnv;
 import gov.nasa.jpf.vm.RestorableVMState;
+import gov.nasa.jpf.vm.choice.BreakGenerator;
 
 import java.rmi.RemoteException;
 import java.util.Deque;
@@ -175,7 +176,7 @@ public class NetworkLayer extends ChannelQueues {
 				queues.deepCopy(this);
 				searchResults.put(msg, queues);
 				// Tell the listener to stop the search
-				env.getVM().ignoreState();
+				env.getVM().setNextChoiceGenerator(new BreakGenerator("write",env.getVM().getCurrentThread(),true));
 				//NetworkLayerListener.saveState(stateId, true);
 		}
 	}
@@ -321,7 +322,7 @@ public class NetworkLayer extends ChannelQueues {
 			queues.deepCopy(this);
 			searchResults.put(msg, queues);
 			// Tell the listener to save the state and stop the search
-			env.getVM().breakTransition();
+			env.getVM().setNextChoiceGenerator(new BreakGenerator("write",env.getVM().getCurrentThread(),true));
 			//NetworkLayerListener.saveState(stateId, true);
 		}
 	}
