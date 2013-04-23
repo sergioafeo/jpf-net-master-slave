@@ -35,9 +35,6 @@ public class JPF_java_net_ServerSocket extends NativePeer {
 	@MJI
 	public static boolean native_init(MJIEnv env, int objRef, int port) {
 		Channel newC =  Channel.get(ChannelType.SERVER, port);
-		if (!net.containsKey(newC))
-			net.newChannel(ChannelType.SERVER, port);
-		else return false;
-		return true;
+		return net.newChannel(newC);
 	}
 }

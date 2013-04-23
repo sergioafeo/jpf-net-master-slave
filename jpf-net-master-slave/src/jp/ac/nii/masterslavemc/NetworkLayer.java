@@ -4,37 +4,39 @@ import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.util.JPFLogger;
 import gov.nasa.jpf.vm.MJIEnv;
 import gov.nasa.jpf.vm.RestorableVMState;
-import gov.nasa.jpf.vm.choice.BreakGenerator;
 
 import java.rmi.RemoteException;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.LinkedList;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Set;
 
 import jp.ac.nii.masterslavemc.Channel.ChannelType;
 
-public class NetworkLayer extends ChannelQueues {
+public class NetworkLayer {
 
 	// Singleton
 	private static final NetworkLayer instance = new NetworkLayer();
-	private static final long serialVersionUID = -5989864108646342444L;
-
+	
 	public static NetworkLayer getInstance() {
 		return instance;
 	}
 
-	Map<Integer, Map<NetworkMessage, ChannelQueues>> alternatives = new HashMap<Integer, Map<NetworkMessage, ChannelQueues>>();;
+	Map<Integer, Map<NetworkMessage, ChannelQueues>> alternatives = new HashMap<Integer, Map<NetworkMessage, ChannelQueues>>();
 
 	private boolean branchingstate;
 
-	private Map<NetworkMessage, ChannelQueues> currentAlternatives;
+	private Map<NetworkMessage, ChannelQueues> currentAlternatives;;
 
 	private int currentDepth;
-	
-	private transient JPFLogger log = JPF.getLogger("jp.ac.nii.masterslavemc.NetworkLayer");
+
+	// The queues
+	private ChannelQueues queues = new ChannelQueues();
+
+	private transient JPFLogger log = JPF
+			.getLogger("jp.ac.nii.masterslavemc.NetworkLayer");
 
 	private SearchParamBundle searchParams;
 
@@ -43,7 +45,8 @@ public class NetworkLayer extends ChannelQueues {
 	private boolean slave = false;
 	private int slaveState;
 	int stateID;
-	private Map<Integer,RestorableVMState> stateRepository = new HashMap<Integer, RestorableVMState>();
+	private Map<Integer, RestorableVMState> stateRepository = new HashMap<Integer, RestorableVMState>();
+
 	private NetworkLayer() {
 		log.info("Network layer initialized.");
 	}
@@ -53,36 +56,41 @@ public class NetworkLayer extends ChannelQueues {
 	 * slave, for that, the current queue status is queried, or we trigger a
 	 * slave search on the port specified.
 	 * 
-	 * @param env MJI environment of the current execution
+	 * @param env
+	 *            MJI environment of the current execution
 	 * 
 	 * @param port
 	 *            Port number of the ServerSocket
 	 * @return the socketID of the remote socket that initiated a connection
 	 */
 	public Set<NetworkMessage> accept(MJIEnv env, int port) {
-		log.info("Accept:"+port);
-		Deque<NetworkMessage> Q = this.get(this.getChannel(port,
-				ChannelType.SERVER));
-		assert (Q!=null) : "Accept message for an uninitialized server socket.";
-		if (!slave && Q.isEmpty() ) { // Queue is empty, ask the slave
+		log.info("Accept:" + port);
+		DoubleQueue channelQ = queues.get(Channel.get(ChannelType.SERVER, port));
+		assert (channelQ != null) : "Accept message for an uninitialized server socket.";
+		Deque<NetworkMessage> Q = channelQ.getIncoming();
+		
+		if (!slave && Q.isEmpty()) { // Queue is empty, ask the slave
 			SearchParamBundle params = new SearchParamBundle(slaveState,
-					this.getChannel(port, ChannelType.SERVER), true,
-					(ChannelQueues) this, SearchCommand.SEARCH);
+					Channel.get(ChannelType.SERVER, port), true, queues,
+					SearchCommand.SEARCH);
 			try {
 				CommAdapter.getInstance().searchSlave(params);
 				SearchResultBundle results = CommAdapter.getInstance()
 						.getSearchResults();
-				log.info("Found "+(results.getSearchResults() != null ? results.getSearchResults().size() : "no")+" connections.");
+				log.info("Found "
+						+ (results.getSearchResults() != null ? results
+								.getSearchResults().size() : "no")
+						+ " connections.");
 				if (results.getSearchResults() != null
 						&& !results.getSearchResults().isEmpty()) {
 					// Get the first message
-					java.util.Map.Entry<NetworkMessage, ChannelQueues> firstmsg = results
+					Entry<NetworkMessage, ChannelQueues> firstmsg = results
 							.getSearchResults().entrySet().iterator().next();
 					// Replace our current state with the incoming state
- 					this.merge(firstmsg.getValue());
- 					slaveState = firstmsg.getKey().getState();
-					//Set<NetworkMessage> retval = new HashSet<NetworkMessage>(
-					//		results.getSearchResults().keySet());
+					this.mergeIncoming(firstmsg.getValue());
+					slaveState = firstmsg.getKey().getState();
+					Set<NetworkMessage> retval = new HashSet<NetworkMessage>(
+					 results.getSearchResults().keySet());
 					// Remove from the set and save the rest
 					results.getSearchResults().remove(firstmsg.getKey());
 					// Save if there is something left
@@ -91,20 +99,25 @@ public class NetworkLayer extends ChannelQueues {
 												// the state is remembered
 						this.currentAlternatives = new HashMap<NetworkMessage, ChannelQueues>(
 								results.getSearchResults());
+						slaveState = firstmsg.getKey().getState();
+						// consume the message in the queue
+						Q.removeLast();
+						return retval;
 					}
-					//return retval;
 				}
-				//return null;
+				// return null;
 			} catch (RemoteException e) {
 				e.printStackTrace();
 				return null;
 			}
 		}
-		// At this point we may check again if there is a connect message in the queue
-		// We'll come here directly if we are in the slave or we already have data in the queue
-		Q = this.get(this.getChannel(port,
-				ChannelType.SERVER));
-		if (!Q.isEmpty()){ // There is a connection, return it
+		// At this point we may check again if there is a connect message in the
+		// queue
+		// We'll come here directly if we are in the slave or we already have
+		// data in the queue
+		channelQ = queues.get(Channel.get(ChannelType.SERVER, port));
+		Q = channelQ.getIncoming();
+		if (!Q.isEmpty()) { // There is a connection, return it
 			Set<NetworkMessage> res = new HashSet<NetworkMessage>();
 			NetworkMessage msg = Q.removeLast();
 			res.add(msg);
@@ -122,11 +135,13 @@ public class NetworkLayer extends ChannelQueues {
 
 	/**
 	 * Callback method for state advance. (unused)
-	 * @param depth The current depth
+	 * 
+	 * @param depth
+	 *            The current depth
 	 */
 	public void advance(int depth) {
 		currentDepth = depth;
-		if (branchingstate){
+		if (branchingstate) {
 			alternatives.put(depth, currentAlternatives);
 			branchingstate = false;
 		}
@@ -134,64 +149,77 @@ public class NetworkLayer extends ChannelQueues {
 
 	/**
 	 * Remove queue elements up to a specified depth for backtracking
-	 * @param depth The depth to which it should be backtracked
+	 * 
+	 * @param depth
+	 *            The depth to which it should be backtracked
 	 */
 	public void backtrack(int depth) {
-		
+
 		// If there are alternatives, switch to the next one
 		Map<NetworkMessage, ChannelQueues> alt = alternatives.get(depth);
-		if (alt != null && !alt.isEmpty()){
-			java.util.Map.Entry<NetworkMessage, ChannelQueues> newstate = alt.entrySet().iterator().next();
-			this.merge(newstate.getValue());
+		if (alt != null && !alt.isEmpty()) {
+			java.util.Map.Entry<NetworkMessage, ChannelQueues> newstate = alt
+					.entrySet().iterator().next();
+			this.mergeIncoming(newstate.getValue());
 			slaveState = newstate.getKey().getState();
 			alt.remove(newstate.getKey());
 			return;
 		}
-		
+
 		// If simple backtracking without alternatives
 		// Remove from the queues all messages below the indicated depth
-		for (java.util.Map.Entry<Channel, Deque<NetworkMessage>> e : this.entrySet()){
-			Deque<NetworkMessage> Q = e.getValue();
-			while (Q.peekLast()!=null && Q.peekLast().getDepth() >= depth)
+		for (Entry<Channel, DoubleQueue> e : queues
+				.entrySet()) {
+			Deque<NetworkMessage> Q = e.getValue().getOutgoing();
+			while (Q.peekLast() != null && Q.peekLast().getDepth() >= depth)
 				Q.removeLast();
 		}
-		
+
 	}
 
 	public void connect(MJIEnv env, int id, int port) {
-		log.info("Connect: "+port);
+		log.info("Connect: " + port);
 		// Get the queue for the current socket
-		Deque<NetworkMessage> Q = this.get(Channel.get(ChannelType.SERVER,port));
+		DoubleQueue dq = queues.get(Channel.get(ChannelType.SERVER,
+				port));
+		assert dq!=null : "Trying to connect to non-existing server socket.";
+		Deque<NetworkMessage> Q = dq.getOutgoing();
 		// Remember this state, make room for it in the repository
 		int stateId = addState(env.getVM().getRestorableState());
-		// Create new CONNECT network message and put in on the corresponding queue
-		NetworkMessage msg = new NetworkMessage(0, true, Channel.get(ChannelType.CLIENT,id), stateId);
+		// Create new CONNECT network message and put in on the corresponding
+		// queue
+		NetworkMessage msg = new NetworkMessage(0, true, Channel.get(
+				ChannelType.CLIENT, id), stateId);
 		msg.setDepth(env.getJPF().getSearch().getDepth());
 		Q.add(msg);
 		// Check whether this connect is search relevant
-		if (slave && searchParams.getSearchChannel().getType() == ChannelType.SERVER && port == searchParams.getSearchChannel().getId()){						
-				// Copy the current queue status
-				ChannelQueues queues = new ChannelQueues();
-				// DEEP CLONE NECESSARY
-				queues.deepCopy(this);
-				searchResults.put(msg, queues);
-				// Tell the listener to stop the search
-				env.getVM().breakTransition();
-				NetworkLayerListener.saveState(stateId, true);
+		if (slave
+				&& searchParams.getSearchChannel().getType() == ChannelType.SERVER
+				&& port == searchParams.getSearchChannel().getId()) {
+			// Copy the current queue status
+			ChannelQueues snapshot = new ChannelQueues();
+			// DEEP CLONE NECESSARY
+			snapshot.deepCopy(this.queues);
+			searchResults.put(msg, snapshot);
+			// Tell the listener to stop the search
+			env.getVM().breakTransition();
+			NetworkLayerListener.saveState(stateId, true);
 		}
 	}
-	private synchronized Channel getChannel(int id, ChannelType type) {
-		Channel c = Channel.get(type, id);
-		if (this.containsKey(c))
-			return c;
-		else
-			return null;
-	}
+
+//	private synchronized Channel getChannel(int id, ChannelType type) {
+//		Channel c = Channel.get(type, id);
+//		if (outgoing.containsKey(c))
+//			return c;
+//		else
+//			return null;
+//	}
+
 	public SearchParamBundle getSearchParams() {
 		return searchParams;
 	}
-	
-	public Map<NetworkMessage, ChannelQueues> getSearchResults(){
+
+	public Map<NetworkMessage, ChannelQueues> getSearchResults() {
 		Map<NetworkMessage, ChannelQueues> retval = searchResults;
 		searchResults = new HashMap<NetworkMessage, ChannelQueues>();
 		return retval;
@@ -209,30 +237,40 @@ public class NetworkLayer extends ChannelQueues {
 		return slave;
 	}
 
-	private void merge(ChannelQueues queues) {
-		this.clear();
-		this.putAll(queues);
+	private void mergeIncoming(ChannelQueues in) {
+		queues.clear();
+		for (Entry<Channel, DoubleQueue> e : in.entrySet()) {
+			// Invert incoming and outgoing
+			queues.put(e.getKey(), new DoubleQueue(e.getValue().getOutgoing(),
+					e.getValue().getIncoming()));
+		}
 	}
 
-	public void newChannel(Channel c) {
-		this.put(c, new LinkedList<NetworkMessage>());
+	public boolean newChannel(Channel c) {
+		if (queues.get(c) != null)
+			return false;
+		queues.put(c, new DoubleQueue());
+		return true;
 	}
 
-	public void newChannel(ChannelType socketType, int socketID) {
-		// TODO: decide what the best concrete implementation of queues is.
-		// for now a LinkedList seems the most compact in memory
-		this.put(Channel.get(socketType, socketID),
-				new LinkedList<NetworkMessage>());
+	public boolean newChannel(ChannelType socketType, int socketID) {
+		Channel c = Channel.get(socketType, socketID);
+		if (queues.get(c) != null)
+			return false;
+		queues.put(c, new DoubleQueue());
+		return true;
 	}
 
 	public Set<NetworkMessage> read(MJIEnv env, int sockID) {
-		log.info("Read:"+sockID);
+		log.info("Read:" + sockID);
 		// Get the queue for the specified socket
-		Deque<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,sockID));
-		if (!slave && Q.isEmpty()){ //Need to search the slave
+		DoubleQueue dq = queues.get(Channel.get(ChannelType.CLIENT,
+				sockID));
+		Deque<NetworkMessage> Q = dq.getIncoming();
+		if (!slave && Q.isEmpty()) { // Need to search the slave
 			SearchParamBundle params = new SearchParamBundle(slaveState,
-					this.getChannel(sockID, ChannelType.CLIENT), false,
-					(ChannelQueues) this, SearchCommand.SEARCH);
+					Channel.get(ChannelType.CLIENT, sockID), false,
+					queues, SearchCommand.SEARCH);
 			try {
 				CommAdapter.getInstance().searchSlave(params);
 				SearchResultBundle results = CommAdapter.getInstance()
@@ -243,9 +281,8 @@ public class NetworkLayer extends ChannelQueues {
 					java.util.Map.Entry<NetworkMessage, ChannelQueues> firstmsg = results
 							.getSearchResults().entrySet().iterator().next();
 					// Replace our current state with the incoming state
- 					this.merge(firstmsg.getValue());
-					//Set<NetworkMessage> retval = new HashSet<NetworkMessage>(
-					//		results.getSearchResults().keySet());
+					this.mergeIncoming(firstmsg.getValue());
+					 Set<NetworkMessage> retval = new HashSet<NetworkMessage>(results.getSearchResults().keySet());
 					// Remove from the set and save the rest
 					results.getSearchResults().remove(firstmsg.getKey());
 					// Save if there is something left
@@ -254,20 +291,26 @@ public class NetworkLayer extends ChannelQueues {
 												// the state is remembered
 						this.currentAlternatives = new HashMap<NetworkMessage, ChannelQueues>(
 								results.getSearchResults());
+						slaveState = firstmsg.getKey().getState();
+						// consume the message
+						Q.removeLast();
+						return retval;
 					}
-					//return retval;
 				}
-				//return null;
+				// return null;
 			} catch (RemoteException e) {
 				e.printStackTrace();
 				return null;
 			}
-		} 
-		
-		 // Just retrieve the queue message
-		Q = this.get(Channel.get(ChannelType.CLIENT,sockID));
-		if (!Q.isEmpty()){
+		}
+
+		// Just retrieve the queue message
+		dq = queues.get(Channel.get(ChannelType.CLIENT,
+				sockID));
+		Q = dq.getIncoming();
+		if (!Q.isEmpty()) {
 			Set<NetworkMessage> res = new HashSet<NetworkMessage>();
+			slaveState = Q.peek().getState();
 			res.add(Q.remove());
 			return res;
 		}
@@ -277,7 +320,7 @@ public class NetworkLayer extends ChannelQueues {
 
 	public void setSearchParams(SearchParamBundle searchParams) {
 		this.searchParams = searchParams;
-		this.merge(searchParams.getIncomingQueues());
+		this.mergeIncoming(searchParams.getQueues());
 	}
 
 	/**
@@ -289,24 +332,25 @@ public class NetworkLayer extends ChannelQueues {
 		this.slave = slave;
 		if (slave)
 			log.info("Network layer set to SLAVE mode.");
-		else 
+		else
 			log.info("Network layer set to MASTER mode.");
 	}
-	
+
 	public void setSlaveState(int slaveState) {
 		this.slaveState = slaveState;
 	}
 
 	public void updateState(int stateId, RestorableVMState restorableState) {
-		stateRepository.put(stateId, restorableState);		
+		stateRepository.put(stateId, restorableState);
 	}
 
 	public void write(MJIEnv env, int sockID, int b) {
-		log.info("WRITE:"+sockID+": "+b);
-		Deque<NetworkMessage> Q = this.get(Channel.get(ChannelType.CLIENT,
+		log.info("WRITE:" + sockID + ": " + b);
+		DoubleQueue dq = queues.get(Channel.get(ChannelType.CLIENT,
 				sockID));
-		assert (Q != null) : "Attempt to write to an uninitialized socket.";
-
+		assert (dq != null) : "Attempt to write to an uninitialized socket.";
+		Deque<NetworkMessage> Q = dq.getOutgoing();
+		
 		// We may Remember this state, make room for it in the repository
 		int stateId = addState(env.getVM().getRestorableState());
 		Channel sock = Channel.get(ChannelType.CLIENT, sockID);
@@ -318,9 +362,9 @@ public class NetworkLayer extends ChannelQueues {
 				&& searchParams.getSearchChannel().getType() == ChannelType.CLIENT
 				&& sock.getId() == searchParams.getSearchChannel().getId()) {
 			// Copy the current queue status
-			ChannelQueues queues = new ChannelQueues();
-			queues.deepCopy(this);
-			searchResults.put(msg, queues);
+			ChannelQueues snapshot = new ChannelQueues();
+			snapshot.deepCopy(this.queues);
+			searchResults.put(msg, snapshot);
 			// Tell the listener to save the state and stop the search
 			env.getVM().breakTransition();
 			NetworkLayerListener.saveState(stateId, true);

@@ -26,7 +26,7 @@ class WorkerThread implements Runnable {
 		while (msg != -1)
 			try {
 				msg = input.read();
-				if (msg == 250) {
+				if (msg == 252) {
 					assert (false);
 				} else if (msg != -1)
 					output.write(msg);

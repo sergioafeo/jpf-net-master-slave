@@ -2,7 +2,7 @@ package jp.ac.nii.masterslavemc;
 
 import java.io.Serializable;
 
-public class SearchParamBundle implements Serializable{
+public class SearchParamBundle implements Serializable {
 	/**
 	 * 
 	 */
@@ -11,27 +11,33 @@ public class SearchParamBundle implements Serializable{
 	private int startState;
 
 	private Channel searchChannel;
-	private ChannelQueues incomingQueues;
+	private ChannelQueues queues;
+	public void setQueues(ChannelQueues queues) {
+		this.queues = queues;
+	}
+
 	private SearchCommand command;
 	private boolean connectAction;
-	
-	public SearchParamBundle(int slaveState, Channel searchChannel, boolean connectAction,
-			ChannelQueues incomingQueues, SearchCommand command) {
+
+	public SearchParamBundle(int slaveState, Channel searchChannel,
+			boolean connectAction, ChannelQueues queues2,
+			SearchCommand command) {
 		this.setConnectAction(connectAction);
 		this.startState = slaveState;
 		this.searchChannel = searchChannel;
-		this.incomingQueues = incomingQueues;
+		this.queues = queues2;
 		this.command = command;
 	}
+
 	@Override
 	public boolean equals(Object obj) {
-		if (obj instanceof SearchParamBundle){
+		if (obj instanceof SearchParamBundle) {
 			SearchParamBundle x = (SearchParamBundle) obj;
-			if (	x.incomingQueues.equals(this.incomingQueues) &&
-					x.command == this.command &&
-					x.connectAction == this.connectAction &&
-					x.searchChannel.equals(this.searchChannel) &&
-					x.startState == this.startState)
+			if (x.queues.equals(this.queues)
+					&& x.command == this.command
+					&& x.connectAction == this.connectAction
+					&& x.searchChannel.equals(this.searchChannel)
+					&& x.startState == this.startState)
 				return true;
 		}
 		return false;
@@ -41,8 +47,8 @@ public class SearchParamBundle implements Serializable{
 		return command;
 	}
 
-	public ChannelQueues getIncomingQueues() {
-		return incomingQueues;
+	public ChannelQueues getQueues() {
+		return queues;
 	}
 
 	public Channel getSearchChannel() {
@@ -55,11 +61,9 @@ public class SearchParamBundle implements Serializable{
 
 	@Override
 	public int hashCode() {
-		return incomingQueues.hashCode() +
-				command.hashCode() * 73 +
-				(connectAction ? 1 : 0) * 547 +
-				searchChannel.hashCode() * 1087 +
-				startState * 2131;
+		return queues.hashCode() + command.hashCode() * 73
+				+ (connectAction ? 1 : 0) * 547 + searchChannel.hashCode()
+				* 1087 + startState * 2131;
 	}
 
 	public boolean isConnectAction() {
@@ -72,10 +76,6 @@ public class SearchParamBundle implements Serializable{
 
 	public void setConnectAction(boolean connectAction) {
 		this.connectAction = connectAction;
-	}
-
-	public void setIncomingQueues(ChannelQueues incomingQueues) {
-		this.incomingQueues = incomingQueues;
 	}
 
 	public void setSearchChannel(Channel searchChannel) {
