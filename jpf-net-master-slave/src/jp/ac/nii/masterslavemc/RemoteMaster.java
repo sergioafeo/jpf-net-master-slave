@@ -3,6 +3,7 @@ package jp.ac.nii.masterslavemc;
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPF;
 
+import java.net.ConnectException;
 import java.rmi.NotBoundException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -28,19 +29,36 @@ public class RemoteMaster {
 		
 		// Start the communication
 		// Get the RMI infrastructure up and running, export the comm object
-		try {			
-			IMasterSlaveCommunication stub = (IMasterSlaveCommunication) UnicastRemoteObject
+		IMasterSlaveCommunication stub;
+		Registry registry;
+		
+		try {
+			stub = (IMasterSlaveCommunication) UnicastRemoteObject
 					.exportObject(MasterSlaveCommunication.getInstance(), 0);
-			// Bind the remote object's stub in the registry
-			Registry registry = LocateRegistry.getRegistry();
-			registry.rebind("RemoteMasterSearch", stub);
-			System.err
-					.println("Master server started. Waiting for the slave to initialize...");
-		} catch (RemoteException e1) {
-			e1.printStackTrace();
-			
+		} catch (RemoteException e) {
+			e.printStackTrace();
 			return;
 		}
+		
+		try {			
+			// Bind the remote object's stub in the registry
+			registry = LocateRegistry.getRegistry();
+			registry.rebind("RemoteMasterSearch", stub);
+		} catch (RemoteException e1) {
+			System.err.print("Failed to bind to RMI registry. Will try to start it...");
+			try{
+				registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
+				registry.rebind("RemoteMasterSearch", stub);
+			}catch(RemoteException e2){
+				System.err.println("FAILED.");
+				return;
+			}
+			System.err.println("SUCCESS.");
+		}
+		
+		System.err
+		.println("Master server started. Waiting for the slave to initialize...");
+		
 		// Finally, launch the master after waiting for the slave to initialize
 		try {
 			while (MasterSlaveCommunication.getInstance().getSlave() == null) {
