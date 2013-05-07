@@ -11,7 +11,7 @@ public class SimpleSlave {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int msgs[] = {0, 1, 2, 252, 3, 4, 5, 10, 252, 8};
+		int msgs[] = {0, 1, 2, 252, 3, 4, 5, 10, 250, 8};
 		try {
 			Socket s = new Socket("localhost", 5123);
 			InputStream input = s.getInputStream();
@@ -21,7 +21,7 @@ public class SimpleSlave {
 				output.write(msg);
 				int reply = input.read();
 				if (reply != msg) {
-					assert(false);
+					// assert(false);
 				}
 			} 
 				

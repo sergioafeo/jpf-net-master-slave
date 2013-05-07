@@ -30,7 +30,7 @@ public class NetworkLayer {
 
 	private Map<NetworkMessage, ChannelQueues> currentAlternatives;;
 
-	private int currentDepth;
+	private int currentDepth = 0;
 
 	// The queues
 	private ChannelQueues queues = new ChannelQueues();
@@ -72,7 +72,7 @@ public class NetworkLayer {
 		if (!slave && Q.isEmpty()) { // Queue is empty, ask the slave
 			SearchParamBundle params = new SearchParamBundle(slaveState,
 					Channel.get(ChannelType.SERVER, port), true, queues,
-					SearchCommand.SEARCH);
+					SearchCommand.SEARCH,currentDepth);
 			try {
 				CommAdapter.getInstance().searchSlave(params);
 				SearchResultBundle results = CommAdapter.getInstance()
@@ -163,10 +163,8 @@ public class NetworkLayer {
 			this.mergeIncoming(newstate.getValue());
 			slaveState = newstate.getKey().getState();
 			alt.remove(newstate.getKey());
-			return;
 		}
-
-		// If simple backtracking without alternatives
+		
 		// Remove from the queues all messages below the indicated depth
 		for (Entry<Channel, DoubleQueue> e : queues
 				.entrySet()) {
@@ -190,7 +188,7 @@ public class NetworkLayer {
 		// queue
 		NetworkMessage msg = new NetworkMessage(0, true, Channel.get(
 				ChannelType.CLIENT, id), stateId);
-		msg.setDepth(env.getJPF().getSearch().getDepth());
+		msg.setDepth(currentDepth);
 		Q.add(msg);
 		// Check whether this connect is search relevant
 		if (slave
@@ -270,7 +268,7 @@ public class NetworkLayer {
 		if (!slave && Q.isEmpty()) { // Need to search the slave
 			SearchParamBundle params = new SearchParamBundle(slaveState,
 					Channel.get(ChannelType.CLIENT, sockID), false,
-					queues, SearchCommand.SEARCH);
+					queues, SearchCommand.SEARCH, currentDepth);
 			try {
 				CommAdapter.getInstance().searchSlave(params);
 				SearchResultBundle results = CommAdapter.getInstance()
@@ -356,6 +354,7 @@ public class NetworkLayer {
 		Channel sock = Channel.get(ChannelType.CLIENT, sockID);
 		// Create the message
 		NetworkMessage msg = new NetworkMessage(b, false, sock, stateId);
+		msg.setDepth(currentDepth);
 		Q.add(msg);
 		// Check if it is search relevant
 		if (slave

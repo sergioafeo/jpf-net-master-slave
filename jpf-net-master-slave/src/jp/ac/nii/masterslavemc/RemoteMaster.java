@@ -50,7 +50,7 @@ public class RemoteMaster {
 				registry = LocateRegistry.createRegistry(Registry.REGISTRY_PORT);
 				registry.rebind("RemoteMasterSearch", stub);
 			}catch(RemoteException e2){
-				System.err.println("FAILED.");
+				System.err.println("FAILED. Program aborted.");
 				return;
 			}
 			System.err.println("SUCCESS.");

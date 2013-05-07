@@ -80,7 +80,7 @@ public class MasterSearch extends SharedSearch {
 		try {	
 		log.info("Search finished, sending termination command to slave.");
 		comm.searchSlave(new SearchParamBundle(0, null, false, null,
-				SearchCommand.FINISH));
+				SearchCommand.FINISH, depth));
 		} catch (RemoteException e) {
 			e.printStackTrace();
 		}
