@@ -21,6 +21,7 @@ public class NetworkMessage implements Serializable{
 	 * -1 signals an uninitialized message.
 	 */
 	private int depth = -1;
+	private int remoteDepth = -1;
 	private Channel origin;
 	/**
 	 * VM State of the slave after sending the message
@@ -87,5 +88,13 @@ public class NetworkMessage implements Serializable{
 				return true;
 		}
 		return false;
+	}
+
+	public int getRemoteDepth() {
+		return remoteDepth;
+	}
+
+	public void setRemoteDepth(int remoteDepth) {
+		this.remoteDepth = remoteDepth;
 	}
 }
