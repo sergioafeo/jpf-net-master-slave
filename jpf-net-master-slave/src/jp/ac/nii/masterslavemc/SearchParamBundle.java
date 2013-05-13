@@ -40,7 +40,8 @@ public class SearchParamBundle implements Serializable {
 					&& x.connectAction == this.connectAction
 					&& x.searchChannel.equals(this.searchChannel)
 					&& x.startState == this.startState
-					&& x.masterDepth == this.masterDepth)
+			//		&& x.masterDepth == this.masterDepth)
+					)
 				return true;
 		}
 		return false;
@@ -66,7 +67,8 @@ public class SearchParamBundle implements Serializable {
 	public int hashCode() {
 		return queues.hashCode() + command.hashCode() * 73
 				+ (connectAction ? 1 : 0) * 547 + searchChannel.hashCode()
-				* 1087 + startState * 2131 + masterDepth * 2137;
+				* 1087 + startState * 2131;
+		//+	masterDepth * 2137;
 	}
 
 	public boolean isConnectAction() {
