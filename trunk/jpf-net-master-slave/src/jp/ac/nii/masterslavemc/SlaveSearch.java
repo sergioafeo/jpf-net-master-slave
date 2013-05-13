@@ -2,17 +2,16 @@ package jp.ac.nii.masterslavemc;
 
 import gov.nasa.jpf.Config;
 import gov.nasa.jpf.JPFException;
-import gov.nasa.jpf.vm.ChoiceGenerator;
 import gov.nasa.jpf.vm.RestorableVMState;
 import gov.nasa.jpf.vm.VM;
 
 import java.rmi.RemoteException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.HashMap;
+import java.util.Map;
 
 public class SlaveSearch extends SharedSearch {
 
-	private Set<SearchParamBundle> searchCache = new HashSet<SearchParamBundle>();
+	private Map<SearchParamBundle,SearchResultBundle> searchCache = new HashMap<SearchParamBundle,SearchResultBundle>();
 	
 	public SlaveSearch(Config config, VM vm) {
 		super(config, vm);
@@ -76,9 +75,10 @@ public class SlaveSearch extends SharedSearch {
 	private SearchResultBundle doSearch(SearchParamBundle params) {
 
 		// Check whether we have seen this search before
-		if (searchCache.contains(params))
-			return new SearchResultBundle(null);
-		searchCache.add(params);
+		if (searchCache.containsKey(params)){
+			log.fine("Search Cache Hit.");
+			return searchCache.get(params);
+		}
 		int startState = params.getStartState();
 		boolean depthLimitReached = false;
 		
@@ -150,6 +150,7 @@ public class SlaveSearch extends SharedSearch {
 		    }
 		
 		SearchResultBundle results = new SearchResultBundle(net.getSearchResults());
+		searchCache.put(params, results);
 		return results;
 	}
 }
