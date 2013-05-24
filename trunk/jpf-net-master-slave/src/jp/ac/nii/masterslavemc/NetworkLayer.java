@@ -67,7 +67,7 @@ public class NetworkLayer {
 		log.info("Accept:" + port);
 		DoubleQueue channelQ = queues.get(Channel.get(ChannelType.SERVER, port));
 		assert (channelQ != null) : "Accept message for an uninitialized server socket.";
-		Deque<NetworkMessage> Q = channelQ.getIncoming();
+		BacktrackableDeque<NetworkMessage> Q = channelQ.getIncoming();
 		
 		if (!slave && Q.isEmpty()) { // Queue is empty, ask the slave
 			SearchParamBundle params = new SearchParamBundle(slaveState,
@@ -100,8 +100,10 @@ public class NetworkLayer {
 						this.currentAlternatives = new HashMap<NetworkMessage, ChannelQueues>(
 								results.getSearchResults());
 						slaveState = firstmsg.getKey().getState();
-						// consume the message in the queue
-						Q.removeLast();
+						// consume the message in the queue, remember to refresh the references
+						channelQ = queues.get(Channel.get(ChannelType.SERVER, port));
+						Q = channelQ.getIncoming();
+						Q.removeLast(currentDepth);
 						return retval;
 					}
 				}
@@ -119,7 +121,7 @@ public class NetworkLayer {
 		Q = channelQ.getIncoming();
 		if (!Q.isEmpty()) { // There is a connection, return it
 			Set<NetworkMessage> res = new HashSet<NetworkMessage>();
-			NetworkMessage msg = Q.removeLast();
+			NetworkMessage msg = Q.removeLast(currentDepth);
 			res.add(msg);
 			slaveState = msg.getState();
 			return res;
@@ -165,14 +167,14 @@ public class NetworkLayer {
 			alt.remove(newstate.getKey());
 		}
 		
-		// Remove from the queues all messages below the indicated depth
+		// Backtrack the queues
 		for (Entry<Channel, DoubleQueue> e : queues
 				.entrySet()) {
-			Deque<NetworkMessage> Q = e.getValue().getOutgoing();
-			while (Q.peekLast() != null && Q.peekLast().getDepth() >= depth)
-				Q.removeLast();
+			e.getValue().getOutgoing().backtrack(depth);
+			e.getValue().getIncoming().backtrack(depth);
 		}
 
+		currentDepth = depth;
 	}
 
 	public void connect(MJIEnv env, int id, int port) {
@@ -181,7 +183,7 @@ public class NetworkLayer {
 		DoubleQueue dq = queues.get(Channel.get(ChannelType.SERVER,
 				port));
 		assert dq!=null : "Trying to connect to non-existing server socket.";
-		Deque<NetworkMessage> Q = dq.getOutgoing();
+		BacktrackableDeque<NetworkMessage> Q = dq.getOutgoing();
 		// Remember this state, make room for it in the repository
 		int stateId = addState(env.getVM().getRestorableState());
 		// Create new CONNECT network message and put in on the corresponding
@@ -189,7 +191,7 @@ public class NetworkLayer {
 		NetworkMessage msg = new NetworkMessage(0, true, Channel.get(
 				ChannelType.CLIENT, id), stateId);
 		msg.setDepth(currentDepth);
-		Q.add(msg);
+		Q.add(msg, currentDepth);
 		// Check whether this connect is search relevant
 		if (slave
 				&& searchParams.getSearchChannel().getType() == ChannelType.SERVER
@@ -264,7 +266,7 @@ public class NetworkLayer {
 		// Get the queue for the specified socket
 		DoubleQueue dq = queues.get(Channel.get(ChannelType.CLIENT,
 				sockID));
-		Deque<NetworkMessage> Q = dq.getIncoming();
+		BacktrackableDeque<NetworkMessage> Q = dq.getIncoming();
 		if (!slave && Q.isEmpty()) { // Need to search the slave
 			SearchParamBundle params = new SearchParamBundle(slaveState,
 					Channel.get(ChannelType.CLIENT, sockID), false,
@@ -290,8 +292,11 @@ public class NetworkLayer {
 						this.currentAlternatives = new HashMap<NetworkMessage, ChannelQueues>(
 								results.getSearchResults());
 						slaveState = firstmsg.getKey().getState();
-						// consume the message
-						Q.removeLast();
+						// consume the message, refresh the queue references first
+						dq = queues.get(Channel.get(ChannelType.CLIENT,
+								sockID));
+						Q = dq.getIncoming();
+						Q.removeLast(currentDepth);
 						return retval;
 					}
 				}
@@ -309,7 +314,7 @@ public class NetworkLayer {
 		if (!Q.isEmpty()) {
 			Set<NetworkMessage> res = new HashSet<NetworkMessage>();
 			slaveState = Q.peek().getState();
-			res.add(Q.remove());
+			res.add(Q.remove(currentDepth));
 			return res;
 		}
 		log.info("Empty read.");
@@ -347,7 +352,7 @@ public class NetworkLayer {
 		DoubleQueue dq = queues.get(Channel.get(ChannelType.CLIENT,
 				sockID));
 		assert (dq != null) : "Attempt to write to an uninitialized socket.";
-		Deque<NetworkMessage> Q = dq.getOutgoing();
+		BacktrackableDeque<NetworkMessage> Q = dq.getOutgoing();
 		
 		// We may Remember this state, make room for it in the repository
 		int stateId = addState(env.getVM().getRestorableState());
@@ -355,7 +360,7 @@ public class NetworkLayer {
 		// Create the message
 		NetworkMessage msg = new NetworkMessage(b, false, sock, stateId);
 		msg.setDepth(currentDepth);
-		Q.add(msg);
+		Q.add(msg, currentDepth);
 		// Check if it is search relevant
 		if (slave
 				&& searchParams.getSearchChannel().getType() == ChannelType.CLIENT

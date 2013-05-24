@@ -4,6 +4,14 @@ import java.io.Serializable;
 import java.util.Deque;
 import java.util.LinkedList;
 
+/**
+ * Class that constitutes the main store for the network state. It consists of two queues:
+ * One for incoming and one for outgoing messages. It maintains a history of operations
+ * to ensure full persistency during search. 
+ * 
+ * @author Sergio A. Feo
+ *
+ */
 public class DoubleQueue implements Serializable{
 	@Override
 	public int hashCode() {
@@ -21,33 +29,31 @@ public class DoubleQueue implements Serializable{
 
 	private static final long serialVersionUID = 5944112381766159796L;
 
-	private Deque<NetworkMessage> incoming, outgoing;
+	private BacktrackableDeque<NetworkMessage> incoming, outgoing;
 	
 	public DoubleQueue(){
-		incoming = new LinkedList<NetworkMessage>();
-		outgoing = new LinkedList<NetworkMessage>();
+		incoming = new BacktrackableDeque<NetworkMessage>();
+		outgoing = new BacktrackableDeque<NetworkMessage>();
 	}
 
-	public DoubleQueue(Deque<NetworkMessage> newIncoming,
-			Deque<NetworkMessage> newOutgoing) {
+	public DoubleQueue(BacktrackableDeque<NetworkMessage> newIncoming,
+			BacktrackableDeque<NetworkMessage> newOutgoing) {
 		incoming = newIncoming;
 		outgoing = newOutgoing;
 	}
 	
-	public Deque<NetworkMessage> getIncoming() {
+	public BacktrackableDeque<NetworkMessage> getIncoming() {
 		return incoming;
 	}
 
-	public Deque<NetworkMessage> getOutgoing() {
+	public BacktrackableDeque<NetworkMessage> getOutgoing() {
 		return outgoing;
 	}
 
-	public void setIncoming(Deque<NetworkMessage> incoming) {
-		this.incoming = incoming;
-	}
-
-	public void setOutgoing(Deque<NetworkMessage> outgoing) {
-		this.outgoing = outgoing;
+	public void invert(){
+		BacktrackableDeque<NetworkMessage> temp = incoming;
+		incoming = outgoing;
+		outgoing = temp;
 	}
 
 	@Override
@@ -59,4 +65,6 @@ public class DoubleQueue implements Serializable{
 		sb.append("}");
 		return sb.toString();
 	}
+	
+	
 }

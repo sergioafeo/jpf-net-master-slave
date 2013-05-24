@@ -13,14 +13,8 @@ public class ChannelQueues extends Hashtable<Channel,DoubleQueue> implements Ser
 		this.clear();
 		for (java.util.Map.Entry<Channel, DoubleQueue>  e : obj.entrySet()) {
 			DoubleQueue q = e.getValue();
-			Deque<NetworkMessage> newIncoming = new LinkedList<NetworkMessage>();
-			Deque<NetworkMessage> newOutgoing = new LinkedList<NetworkMessage>();
-			for (NetworkMessage m : q.getIncoming()){
-				newIncoming.addFirst(m);
-			}
-			for (NetworkMessage m : q.getOutgoing()){
-				newOutgoing.addFirst(m);
-			}
+			BacktrackableDeque<NetworkMessage> newIncoming = e.getValue().getIncoming().deepClone();
+			BacktrackableDeque<NetworkMessage> newOutgoing = e.getValue().getOutgoing().deepClone();
 			this.put(e.getKey(), new DoubleQueue(newIncoming, newOutgoing));
 		}
 		
