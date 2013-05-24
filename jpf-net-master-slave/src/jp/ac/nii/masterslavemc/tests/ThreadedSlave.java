@@ -1,26 +1,21 @@
-package jp.ac.nii.masterslavemc.examples;
+package jp.ac.nii.masterslavemc.tests;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import gov.nasa.jpf.vm.Verify;
 
 class MessengerThread implements Runnable{
 	@Override
 	public void run() {
 		while (ThreadedSlave.hasMsg()){
 			try {
-				Verify.beginAtomic();
 				int msg = ThreadedSlave.getMsg();
-				Verify.endAtomic();
 				ThreadedSlave.output.write(msg);
-				Verify.beginAtomic();
 				int response = ThreadedSlave.input.read();
 				if (response != msg){
 					assert (false);
 				}
-				Verify.endAtomic();
 			} catch (IOException e) {
 				return;
 			}
@@ -50,7 +45,7 @@ public class ThreadedSlave {
 		return msgs[msgIndex++];
 	}
 	
-	synchronized public static boolean hasMsg() {
+	public static boolean hasMsg() {
 		return msgIndex < msgs.length;
 	}
 	

@@ -19,7 +19,7 @@ public class RemoteSlave {
 		configSlave.setProperty("search.class",
 				"jp.ac.nii.masterslavemc.SlaveSearch");
 		configSlave.setProperty("target",
-				"jp.ac.nii.masterslavemc.examples.SimpleSlave");
+				"jp.ac.nii.masterslavemc.examples.ThreadedSlave");
 		// Obtain JPF instance
 		JPF slave = new JPF(configSlave);
 
