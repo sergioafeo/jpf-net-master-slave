@@ -24,6 +24,7 @@ package jp.ac.nii.masterslavemc.examples.chat;
 import java.io.*;
 import java.net.InetSocketAddress;
 import java.net.Socket;
+import java.util.Random;
 
 public class ChatClient extends Thread {
 
@@ -42,25 +43,24 @@ public class ChatClient extends Thread {
 	}
 
 	public void run() {
-		OutputStreamWriter out;
-		String message = "Hello, World!\n";
+		OutputStream out;
+		int message = 0;
 
 		try {
 			Socket socket = new Socket();
 			InetSocketAddress addr = new InetSocketAddress("localhost", ChatServer.PORT);
 			socket.connect(addr);
 			System.out.println("Client " + id + " connected.");
-			InputStreamReader istr = new InputStreamReader(socket.getInputStream());
-			BufferedReader in = new BufferedReader(istr);
+			InputStream istr = socket.getInputStream();
 
-			out = new OutputStreamWriter(socket.getOutputStream());
+			out = socket.getOutputStream();
 			System.out.println("[CLIENT] " + id + " writes " + message);
-			out.write(id + ": " + message);
+			out.write(message);
 			out.flush();
 
 			// read input
 			for (int i = 0; i < num_read; i++) {
-				System.out.println("[CLIENT " + id + "] receive " + in.readLine() + " at i=" + i);
+				System.out.println("[CLIENT " + id + "] receive " + istr.read() + " at i=" + i);
 			}
 			out.close();
 		} catch (IOException e) {

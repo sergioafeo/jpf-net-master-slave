@@ -81,7 +81,7 @@ class MasterSlaveCommunication implements IMasterSlaveCommunication, Serializabl
 	public synchronized SearchResultBundle getSearchResults() {
 		while (slaveRunning) { 
 			try {
-				wait();
+				wait(1000);
 			} catch (InterruptedException e) {
 			}
 		}

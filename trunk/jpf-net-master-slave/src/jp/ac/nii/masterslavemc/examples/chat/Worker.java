@@ -26,8 +26,8 @@ import java.net.*;
 
 class Worker implements Runnable {
     Socket sock;
-    PrintWriter out;
-    BufferedReader in;
+    OutputStream out;
+    InputStream in;
     ChatServer chatServer;
     int n;
 
@@ -41,7 +41,7 @@ class Worker implements Runnable {
         // reason: other threads may use send via sendAll and thus
         // call out.println before out is initialized.
         try {
-            out = new PrintWriter(sock.getOutputStream());
+            out = sock.getOutputStream();
             assert(out != null);
         } catch(IOException ioe) {
             System.err.println("Worker thread " + n + ": " + ioe);
@@ -50,14 +50,14 @@ class Worker implements Runnable {
     }
 
 	public void run() {
-    	String s;
+    	int s;
         //System.out.println("Thread running: " + Thread.currentThread());
 		try {
-            in = new BufferedReader(new InputStreamReader(sock.getInputStream()));
-            while ((s = in.readLine()) != null) {
+            in =sock.getInputStream();
+            while ((s = in.read()) != -1) {
 		String msg = "[" + n + "] " + s;
 		System.out.println(msg);
-                chatServer.sendAll(msg);
+                chatServer.sendAll(s);
             }
 			chatServer.remove(n);
 			assert (!sock.isClosed());
@@ -67,7 +67,7 @@ class Worker implements Runnable {
 		}
 	}
 
-    public void send(String s) throws IOException {
-        out.println(s);
+    public void send(int s) throws IOException {
+        out.write(s);
     }
 }

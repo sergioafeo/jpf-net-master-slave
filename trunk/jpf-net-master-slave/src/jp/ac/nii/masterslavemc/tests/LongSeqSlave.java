@@ -11,7 +11,9 @@ public class LongSeqSlave {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		int msgs[] = {0, 1, 2, 252, 3, 4, 5, 10, 250, 8};
+		int[] msgs = new int[1500];
+		for (int i = 0; i < msgs.length; i++)
+			msgs[i]=i%250;
 		try {
 			Socket s = new Socket("localhost", 5123);
 			InputStream input = s.getInputStream();

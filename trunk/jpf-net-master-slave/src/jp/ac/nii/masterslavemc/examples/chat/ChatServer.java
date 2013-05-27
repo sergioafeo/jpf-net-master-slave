@@ -106,7 +106,7 @@ public class ChatServer {
 		new ChatServer(Integer.parseInt(args[0]));
 	}
 
-	public synchronized void sendAll(String s) throws IOException {
+	public synchronized void sendAll(int s) throws IOException {
 		int i;
 		for (i = 0; i < workers.length; i++) {
 			if (workers[i] != null) {

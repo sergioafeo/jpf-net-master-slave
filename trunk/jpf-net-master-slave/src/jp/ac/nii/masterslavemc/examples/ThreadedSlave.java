@@ -11,16 +11,16 @@ class MessengerThread implements Runnable{
 	public void run() {
 		while (ThreadedSlave.hasMsg()){
 			try {
-				Verify.beginAtomic();
+				//Verify.beginAtomic();
 				int msg = ThreadedSlave.getMsg();
-				Verify.endAtomic();
+				//Verify.endAtomic();
 				ThreadedSlave.output.write(msg);
-				Verify.beginAtomic();
 				int response = ThreadedSlave.input.read();
+				//Verify.beginAtomic();
 				if (response != msg){
 					assert (false);
 				}
-				Verify.endAtomic();
+				//Verify.endAtomic();
 			} catch (IOException e) {
 				return;
 			}
@@ -50,7 +50,7 @@ public class ThreadedSlave {
 		return msgs[msgIndex++];
 	}
 	
-	synchronized public static boolean hasMsg() {
+	public static boolean hasMsg() {
 		return msgIndex < msgs.length;
 	}
 	
