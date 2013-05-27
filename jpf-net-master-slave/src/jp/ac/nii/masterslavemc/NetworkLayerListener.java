@@ -1,7 +1,9 @@
 package jp.ac.nii.masterslavemc;
 
+import gov.nasa.jpf.JPF;
 import gov.nasa.jpf.ListenerAdapter;
 import gov.nasa.jpf.search.Search;
+import gov.nasa.jpf.util.JPFLogger;
 
 /**
  * Simple listener to maintain the network layer queues synchronized with the search.
@@ -10,9 +12,13 @@ import gov.nasa.jpf.search.Search;
  *
  */
 public class NetworkLayerListener extends ListenerAdapter {
+	private transient JPFLogger log = JPF
+			.getLogger("jp.ac.nii.masterslavemc.NetworkLayerListener");
+
 	private static boolean saveNextState;
 	private static boolean stopSearch;
 	private static int stateId;
+	private static int num = 0;
 	private NetworkLayer net = NetworkLayer.getInstance();
 
 	@Override
@@ -23,6 +29,7 @@ public class NetworkLayerListener extends ListenerAdapter {
 			if (stopSearch) search.getVM().ignoreState();
 			stopSearch = false;
 			saveNextState = false;
+			//log.warning("Stored "+(++num)+" States.");
 		}
 	}
 

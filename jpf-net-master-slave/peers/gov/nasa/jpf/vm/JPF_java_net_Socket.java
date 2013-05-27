@@ -76,25 +76,21 @@ public class JPF_java_net_Socket extends NativePeer {
 		return 0;
 	}
 
+	@MJI
 	public static boolean isConnected(MJIEnv env, int objRef) {
-//		PhysicalConnection c;
 		int sock_id = env.getIntField(objRef, "socketID");
-
-//		c = CacheLayer.conn_list.get(sock_id);
-//		return c.isConnected();
-		return false;
+		return NetworkLayer.getInstance().channelOpen(sock_id);
 	}
 
+	@MJI
 	public static boolean isClosed(MJIEnv env, int objRef) {
-//		CacheLayer cl = CacheLayer.getInstance();
 		int sock_id = env.getIntField(objRef, "socketID");
-		return false;
-
-//		return cl.isSocketClosed(sock_id);
+		return !NetworkLayer.getInstance().channelOpen(sock_id);
 	}
 
 	@MJI
 	public static void close(MJIEnv env, int objRef) throws IOException {
-		// Ignore closing for now
+		int sock_id = env.getIntField(objRef, "socketID");
+		NetworkLayer.getInstance().closeSocket(sock_id);
 	}
 }

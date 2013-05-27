@@ -12,5 +12,5 @@
 </listAttribute>
 <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="jp.ac.nii.masterslavemc.RemoteMaster"/>
 <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="jpf-net-master-slave"/>
-<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Djava.rmi.server.codebase=file:${workspace_loc}/jpf-net-master-slave/bin/"/>
+<stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Djava.rmi.server.codebase=file:${workspace_loc}/jpf-net-master-slave/bin/ -Dxsun.rmi.client.logCalls=true -Dxjava.rmi.server.logCalls=true"/>
 </launchConfiguration>

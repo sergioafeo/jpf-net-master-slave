@@ -9,11 +9,13 @@ import java.rmi.RemoteException;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
 import jp.ac.nii.masterslavemc.Channel.ChannelType;
+import jp.ac.nii.masterslavemc.NetworkLayerOperation.OpCode;
 
 public class NetworkLayer {
 
@@ -167,11 +169,23 @@ public class NetworkLayer {
 			alt.remove(newstate.getKey());
 		}
 		
-		// Backtrack the queues
+		// Backtrack the queues individually
 		for (Entry<Channel, DoubleQueue> e : queues
 				.entrySet()) {
 			e.getValue().getOutgoing().backtrack(depth);
 			e.getValue().getIncoming().backtrack(depth);
+		}
+		
+		// Backtrack the queue states themselves
+		while (!history.isEmpty() && 
+				history.peekLast().getDepth() >= depth){
+			NetworkLayerOperation op = history.removeLast();
+			switch (op.getOpcode()){
+			case ADD_CHANNEL:
+				queues.remove(op.getChannel()); break;
+			case REMOVE_CHANNEL:
+				queues.put(op.getChannel(), op.getRef());
+			}
 		}
 
 		currentDepth = depth;
@@ -185,7 +199,7 @@ public class NetworkLayer {
 		assert dq!=null : "Trying to connect to non-existing server socket.";
 		BacktrackableDeque<NetworkMessage> Q = dq.getOutgoing();
 		// Remember this state, make room for it in the repository
-		int stateId = addState(env.getVM().getRestorableState());
+		int stateId = addState(null);
 		// Create new CONNECT network message and put in on the corresponding
 		// queue
 		NetworkMessage msg = new NetworkMessage(0, true, Channel.get(
@@ -249,19 +263,18 @@ public class NetworkLayer {
 	public boolean newChannel(Channel c) {
 		if (queues.get(c) != null)
 			return false;
-		queues.put(c, new DoubleQueue());
+		DoubleQueue ref = new DoubleQueue();
+		queues.put(c, ref);
+		history.addLast(new NetworkLayerOperation(OpCode.ADD_CHANNEL, currentDepth, c, ref));
 		return true;
 	}
 
 	public boolean newChannel(ChannelType socketType, int socketID) {
 		Channel c = Channel.get(socketType, socketID);
-		if (queues.get(c) != null)
-			return false;
-		queues.put(c, new DoubleQueue());
-		return true;
+		return newChannel(c);
 	}
 
-	public Set<NetworkMessage> read(MJIEnv env, int sockID) {
+	public Set<NetworkMessage> read(MJIEnv env, int sockID) throws Exception {
 		log.info("Read:" + sockID);
 		// Get the queue for the specified socket
 		DoubleQueue dq = queues.get(Channel.get(ChannelType.CLIENT,
@@ -355,7 +368,7 @@ public class NetworkLayer {
 		BacktrackableDeque<NetworkMessage> Q = dq.getOutgoing();
 		
 		// We may Remember this state, make room for it in the repository
-		int stateId = addState(env.getVM().getRestorableState());
+		int stateId = addState(null);
 		Channel sock = Channel.get(ChannelType.CLIENT, sockID);
 		// Create the message
 		NetworkMessage msg = new NetworkMessage(b, false, sock, stateId);
@@ -373,5 +386,28 @@ public class NetworkLayer {
 			env.getVM().breakTransition();
 			NetworkLayerListener.saveState(stateId, true);
 		}
+	}
+
+	/**
+	 * Checks whether a channel is part of the network state.
+	 * 
+	 * @param sock_id
+	 * @return true if there is a channel with the indicated sock_id
+	 */
+	public boolean channelOpen(int sock_id) {
+		return queues.containsKey(Channel.get(ChannelType.CLIENT, sock_id));
+	}
+
+	Deque<NetworkLayerOperation> history = new LinkedList<NetworkLayerOperation>();
+	
+	/**
+	 * Removes the indicated channel from the network state.
+	 * 
+	 * @param sock_id
+	 */
+	public void closeSocket(int sock_id) {
+		Channel c = Channel.get(ChannelType.CLIENT, sock_id);
+		DoubleQueue ref = queues.remove(c);
+		history.addLast(new NetworkLayerOperation(NetworkLayerOperation.OpCode.REMOVE_CHANNEL, currentDepth, c, ref));
 	}
 }

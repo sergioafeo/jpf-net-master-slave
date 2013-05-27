@@ -12,7 +12,12 @@ public class JPF_java_io_NetworkLayerInputStream extends NativePeer {
 	
 	@MJI
 	public static int native_read__I___3I(MJIEnv env, int robj, int sockID){
-		Set<NetworkMessage> bytes = net.read(env, sockID);
+		Set<NetworkMessage> bytes;
+		try {
+			bytes = net.read(env, sockID);
+		} catch (Exception e) {
+			return MJIEnv.NULL;
+		}
 		if (bytes != null && bytes.size() > 0){
 			int result = env.newIntArray(bytes.size());
 			ElementInfo ei = env.getElementInfo(result);

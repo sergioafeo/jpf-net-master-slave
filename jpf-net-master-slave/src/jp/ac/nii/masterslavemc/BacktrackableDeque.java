@@ -65,8 +65,9 @@ public class BacktrackableDeque<T> implements Iterable<T>, Serializable{
 	public T removeFirst(int depth){
 		return remove(depth);
 	}
+	
 	@Override
-	public Iterator iterator() {
+	public Iterator<T> iterator() {
 		return data.iterator();
 	}
 	/**
@@ -93,7 +94,7 @@ public class BacktrackableDeque<T> implements Iterable<T>, Serializable{
 	 * @param depth The depth to which the Deque should be backtracked to
 	 */
 	public void backtrack(int depth){
-		while (history.peekLast().getDepth() >= depth){
+		while (!history.isEmpty() && history.peekLast().getDepth() >= depth){
 			DequeOperation<T> op = history.removeLast();
 			// Undo the operation
 			switch (op.getOpcode()){
